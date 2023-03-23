@@ -157,9 +157,34 @@
 			<locationURI>PROJECT_LOC/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c</locationURI>
 		</link>
 		<link>
+			<name>Application/User/Core/adc.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/adc.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Core/can.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/can.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Core/gpio.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/gpio.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Core/i2c.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/i2c.c</locationURI>
+		</link>
+		<link>
 			<name>Application/User/Core/main.c</name>
 			<type>1</type>
 			<locationURI>PROJECT_LOC/Core/Src/main.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Core/spi.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/spi.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/stm32l4xx_hal_msp.c</name>
@@ -170,6 +195,11 @@
 			<name>Application/User/Core/stm32l4xx_it.c</name>
 			<type>1</type>
 			<locationURI>PROJECT_LOC/Core/Src/stm32l4xx_it.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Core/usart.c</name>
+			<type>1</type>
+			<locationURI>PROJECT_LOC/Core/Src/usart.c</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
