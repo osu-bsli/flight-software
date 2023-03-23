@@ -1,3 +1,5 @@
+#include "process.h"
+
 /*
  * Main process loop.
  */
