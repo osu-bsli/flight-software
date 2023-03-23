@@ -16,8 +16,8 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 - [ ] arming logic -- Ram
 	- [ ] initialize CAN
 	- [ ] write functions to arm/disarm each board (will be called from telemetry.c)
-- [ ] `data.c` -- Dersu
-	- [ ] make data fields for all sensors
+- [x] `data.c` -- Dersu
+	- [x] make data fields for all sensors
 - [ ] `process.c` -- Dersu
 	- [ ] call barometer process function
 	- [ ] call telemetry process function
