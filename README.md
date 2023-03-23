@@ -28,8 +28,10 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 		- [ ] parse packets
 		- [ ] read from `data.h` and send data packets
 		- [ ] write those packets to the SD card -- Peter
+	- [ ] tests
 - [ ] recovery
-	- [ ] data buffer -- Dersu
+	- [x] data buffer -- Dersu
 	- [ ] process function -- Peter
 	- [ ] filtering -- Peter
 	- [ ] recovery decision -- Peter
+	- [ ] tests
