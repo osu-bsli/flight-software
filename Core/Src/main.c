@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "process.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
