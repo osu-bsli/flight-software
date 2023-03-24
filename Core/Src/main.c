@@ -107,6 +107,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      // toggle test LED
+	  if(HAL_GPIO_ReadPin(TEST_LED_GPIO_Port, TEST_LED_Pin)) {
+		  HAL_GPIO_WritePin(TEST_LED_GPIO_Port, TEST_LED_Pin, GPIO_PIN_RESET);
+	  } else {
+		  HAL_GPIO_WritePin(TEST_LED_GPIO_Port, TEST_LED_Pin, GPIO_PIN_SET);
+	  }
+
+	  // toggle status LED
+	  if(HAL_GPIO_ReadPin(STATUS_LED_GPIO_Port, STATUS_LED_Pin)) {
+		  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+	  } else {
+		  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
