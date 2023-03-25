@@ -1,5 +1,5 @@
-#ifndef PROCESS_H
-#define PROCESS_H
+#ifndef FC_PROCESS_H
+#define FC_PROCESS_H
 
 /*
  * Initialization.

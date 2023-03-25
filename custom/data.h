@@ -1,3 +1,6 @@
+#ifndef FC_DATA_H
+#define FC_DATA_H
+
 static struct {
 	float timestamp;
 	float altitude;
@@ -31,3 +34,5 @@ static struct {
 	int satellite_count; // unsure if needed
 	float ground_speed; // unsure if needed
 } gps_data_point;
+
+#endif

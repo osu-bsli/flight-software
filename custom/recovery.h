@@ -8,3 +8,8 @@
  *   - dequeue any data points that are too old
  *   - also dequeue if there are too many data points
  */
+
+#ifndef FC_RECOVERY_H
+#define FC_RECOVERY_H
+
+#endif
