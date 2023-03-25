@@ -79,7 +79,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="custom"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lib"/>
+						<entry excluding="packet-parser/test_parser.c|packet-parser/test_packet.c|packet-parser/test_crc.c|packet-parser/test_buffer.c|packet-parser/simulator.c|packet-parser/endianness.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lib"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
