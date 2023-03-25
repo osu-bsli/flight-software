@@ -1,5 +1,11 @@
 # flight-software
 
+## Guidelines
+- Use prefixes (`fc_`, `fc_altimeter_`, etc.) for global variables and functions to avoid name collisions. [See this](https://softwareengineering.stackexchange.com/questions/404613/why-are-module-specific-prefixes-widely-used-for-function-names-in-c-modules).
+- Clean before pushing (Go to Project->Clean, uncheck "Start a build immediately"). Otherwise, the repo will have compiled junk in it.
+- "Private" functions should be `static`.
+- Match the coding style (`snake_case`, etc.)
+
 ## TODO
 Needs to be done this Sunday (2023-03-26) at the latest!
 - [ ] accelerometer 1 -- Lauren, Ayden
