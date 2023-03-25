@@ -1,0 +1,3 @@
+[submodule "lib/packet-parser"]
+	path = lib/packet-parser
+	url = https://github.com/osu-bsli/packet-parser.git
