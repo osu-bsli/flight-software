@@ -7,7 +7,7 @@
 C_SRCS += \
 ../custom/accelerometer_1.c \
 ../custom/accelerometer_2.c \
-../custom/arm.c \
+../custom/arming.c \
 ../custom/barometer.c \
 ../custom/data.c \
 ../custom/magnetometer.c \
@@ -18,7 +18,7 @@ C_SRCS += \
 OBJS += \
 ./custom/accelerometer_1.o \
 ./custom/accelerometer_2.o \
-./custom/arm.o \
+./custom/arming.o \
 ./custom/barometer.o \
 ./custom/data.o \
 ./custom/magnetometer.o \
@@ -29,7 +29,7 @@ OBJS += \
 C_DEPS += \
 ./custom/accelerometer_1.d \
 ./custom/accelerometer_2.d \
-./custom/arm.d \
+./custom/arming.d \
 ./custom/barometer.d \
 ./custom/data.d \
 ./custom/magnetometer.d \
@@ -45,7 +45,7 @@ custom/%.o custom/%.su custom/%.cyclo: ../custom/%.c custom/subdir.mk
 clean: clean-custom
 
 clean-custom:
-	-$(RM) ./custom/accelerometer_1.cyclo ./custom/accelerometer_1.d ./custom/accelerometer_1.o ./custom/accelerometer_1.su ./custom/accelerometer_2.cyclo ./custom/accelerometer_2.d ./custom/accelerometer_2.o ./custom/accelerometer_2.su ./custom/arm.cyclo ./custom/arm.d ./custom/arm.o ./custom/arm.su ./custom/barometer.cyclo ./custom/barometer.d ./custom/barometer.o ./custom/barometer.su ./custom/data.cyclo ./custom/data.d ./custom/data.o ./custom/data.su ./custom/magnetometer.cyclo ./custom/magnetometer.d ./custom/magnetometer.o ./custom/magnetometer.su ./custom/process.cyclo ./custom/process.d ./custom/process.o ./custom/process.su ./custom/recovery.cyclo ./custom/recovery.d ./custom/recovery.o ./custom/recovery.su ./custom/telemetry.cyclo ./custom/telemetry.d ./custom/telemetry.o ./custom/telemetry.su
+	-$(RM) ./custom/accelerometer_1.cyclo ./custom/accelerometer_1.d ./custom/accelerometer_1.o ./custom/accelerometer_1.su ./custom/accelerometer_2.cyclo ./custom/accelerometer_2.d ./custom/accelerometer_2.o ./custom/accelerometer_2.su ./custom/arming.cyclo ./custom/arming.d ./custom/arming.o ./custom/arming.su ./custom/barometer.cyclo ./custom/barometer.d ./custom/barometer.o ./custom/barometer.su ./custom/data.cyclo ./custom/data.d ./custom/data.o ./custom/data.su ./custom/magnetometer.cyclo ./custom/magnetometer.d ./custom/magnetometer.o ./custom/magnetometer.su ./custom/process.cyclo ./custom/process.d ./custom/process.o ./custom/process.su ./custom/recovery.cyclo ./custom/recovery.d ./custom/recovery.o ./custom/recovery.su ./custom/telemetry.cyclo ./custom/telemetry.d ./custom/telemetry.o ./custom/telemetry.su
 
 .PHONY: clean-custom
 

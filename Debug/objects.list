@@ -37,7 +37,7 @@
 "./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.o"
 "./custom/accelerometer_1.o"
 "./custom/accelerometer_2.o"
-"./custom/arm.o"
+"./custom/arming.o"
 "./custom/barometer.o"
 "./custom/data.o"
 "./custom/magnetometer.o"
