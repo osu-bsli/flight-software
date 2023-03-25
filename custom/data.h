@@ -1,33 +1,33 @@
 #ifndef FC_DATA_H
 #define FC_DATA_H
 
-static struct {
+struct {
 	float timestamp;
 	float altitude;
 } fc_data_barometer_point;
 
-static struct {
+struct {
 	float timestamp;
 	float x;
 	float y;
 	float z;
 } fc_data_accelerometer_1_point;
 
-static struct {
+struct {
 	float timestamp;
 	float x;
 	float y;
 	float z;
 } fc_data_accelerometer_2_point;
 
-static struct {
+struct {
 	float timestamp;
 	float x;
 	float y;
 	float z;
 } fc_data_magnetometer_point;
 
-static struct {
+struct {
 	float timestamp;
 	float latitude;
 	float longitude;
