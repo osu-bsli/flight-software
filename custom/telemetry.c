@@ -1,10 +1,10 @@
 #include "telemetry.h"
 #include "packet-parser/parser.h"
 
-void telemetry_initialize(void) {
+void fc_telemetry_init(void) {
 	packetlib_initialize();
 }
 
-void telemetry_process(void) {
+void fc_telemetry_process(void) {
 	packetlib_process();
 }

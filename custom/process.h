@@ -4,6 +4,6 @@
 /*
  * Main process loop.
  */
-void process();
+void fc_process();
 
 #endif
