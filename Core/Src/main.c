@@ -78,7 +78,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  fc_init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -120,6 +120,8 @@ int main(void)
 	  } else {
 		  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
 	  }
+
+	  fc_process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
