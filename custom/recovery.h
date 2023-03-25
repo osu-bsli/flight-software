@@ -12,4 +12,6 @@
 #ifndef FC_RECOVERY_H
 #define FC_RECOVERY_H
 
+void fc_recovery_process(void);
+
 #endif

@@ -13,4 +13,5 @@ void fc_init(void) {
 void fc_process(void) {
 	fc_telemetry_process();
 	fc_barometer_process();
+	fc_recovery_process();
 }

@@ -54,3 +54,7 @@ void altitude_buffer_enqueue(AltitudeBuffer *buffer, float altitude, float times
 	buffer->timestamps[buffer->size] = timestamp;
 	buffer->size += 1;
 }
+
+void fc_recovery_process(void) {
+
+}
