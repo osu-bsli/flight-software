@@ -19,11 +19,13 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 - [x] `data.c` -- Dersu
 	- [x] make data fields for all sensors
 - [ ] `process.c` -- Dersu
-	- [ ] call barometer process function
-	- [ ] call telemetry process function
-	- [ ] call recovery process function
+	- [ ] call init functions
+	- [x] call barometer process function
+	- [x] call telemetry process function
+	- [x] call recovery process function
 - [ ] telemetry -- Dersu
 	- [x] load the packet parsing library we made
+	- [ ] implement arming commands in packet-parser
 	- [ ] process function
 		- [ ] parse packets
 		- [ ] read from `data.h` and send data packets
