@@ -12,6 +12,8 @@
 #ifndef FC_RECOVERY_H
 #define FC_RECOVERY_H
 
-void fc_recovery_process(void);
+#include "fc.h"
+
+void fc_recovery_process(FlightComputer *fc);
 
 #endif

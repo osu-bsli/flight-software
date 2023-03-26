@@ -1,4 +1,5 @@
 #include "recovery.h"
+#include "fc.h"
 
 /*
  * altitude data buffer
@@ -55,6 +56,6 @@ void altitude_buffer_enqueue(AltitudeBuffer *buffer, float altitude, float times
 	buffer->size += 1;
 }
 
-void fc_recovery_process(void) {
+void fc_recovery_process(FlightComputer *fc) {
 
 }

@@ -2,6 +2,7 @@
 #define FC_TELEMETRY_H
 
 #include "fc.h"
+#include <stdint.h>
 
 void fc_telemetry_send_packet(uint8_t *packet_bytes, int packet_size);
 void fc_telemetry_init(FlightComputer *fc);
