@@ -53,6 +53,8 @@ static struct MS5607Readings readings;
 
 void fc_barometer_init(FlightComputer *fc) {
     MS5607StateTypeDef MS5607_Init(hspi1, BAROMETER_CSB_PORT, BAROMETER_CSB_PIN);
+    fc->data.barometer_timestamp = 0.0f;
+    fc->data.barometer_altitude = 0.0f;
 }
 
 void fc_barometer_process(FlightComputer *fc) {
