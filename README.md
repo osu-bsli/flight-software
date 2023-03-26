@@ -17,6 +17,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 - [ ] barometer -- Toby
 	- [x] load library
 	- [x] some kind of process function
+	- [ ] define BAROMETER_CSB_PORT and BAROMETER_CSB_PIN in barometer.h to the barometer connection on the FC for the HAL_GPIO_writePort() call. I don't know how it's connected.
 - [ ] magnetometer (low priority)
 - [ ] gps (low priority)
 - [ ] arming logic -- Ram
