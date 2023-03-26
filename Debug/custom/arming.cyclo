@@ -1,9 +1,0 @@
-arming.c:3:6:fc_arming_arm_primary_fc	1
-arming.c:7:6:fc_arming_disarm_primary_fc	1
-arming.c:11:5:fc_arming_is_primary_fc_armed	1
-arming.c:15:6:fc_arming_arm_secondary_fc	1
-arming.c:19:6:fc_arming_disarm_secondary_fc	1
-arming.c:23:5:fc_arming_is_secondary_fc_armed	1
-arming.c:27:6:fc_arming_arm_camera	1
-arming.c:31:6:fc_arming_disarm_camera	1
-arming.c:35:5:fc_arming_is_camera_armed	1

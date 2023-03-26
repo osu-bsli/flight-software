@@ -1,6 +1,0 @@
-accelerometer_1.c:48:13:fs_accel1_write_register	1
-accelerometer_1.c:58:13:fs_accel1_read_register	2
-accelerometer_1.c:76:6:fs_accel1_init	1
-accelerometer_1.c:85:6:fs_accel1_get_acceleration	1
-accelerometer_1.c:94:5:fs_accel1_interrupt_data_available	1
-accelerometer_1.c:100:6:fs_accel1_interrupt	2
