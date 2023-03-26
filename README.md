@@ -8,7 +8,7 @@
 
 ## TODO
 Needs to be done this Sunday (2023-03-26) at the latest!
-- [ ] accelerometer 1 -- Lauren, Ayden
+- [ ] accelerometer 1 -- Lauren, Ayden, Ram
 	- [ ] initialize the interrupts
 	- [ ] write interrupt logic
 		- [ ] get data in the right format
@@ -20,7 +20,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [ ] define BAROMETER_CSB_PORT and BAROMETER_CSB_PIN in barometer.h to the barometer connection on the FC for the HAL_GPIO_writePort() call. I don't know how it's connected.
 - [ ] magnetometer (low priority)
 - [ ] gps (low priority)
-- [ ] arming logic -- Ram
+- [ ] arming logic -- Peter
 	- [ ] initialize CAN
 	- [ ] write functions to arm/disarm each board (will be called from telemetry.c)
 - [x] `data.c` -- Dersu
@@ -37,7 +37,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [ ] process function
 		- [x] parse packets
 		- [x] read from `data.h` and send data packets
-		- [ ] write those packets to the SD card -- Peter
+		- [ ] write those packets to the SD card -- Dersu
 	- [ ] tests
 - [ ] recovery
 	- [x] data buffer -- Dersu
