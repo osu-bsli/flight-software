@@ -15,8 +15,8 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 		- [ ] write to `data.h`
 - [ ] accelerometer 2 (low priority)
 - [ ] barometer -- Toby
-	- [ ] load library
-	- [ ] some kind of process function
+	- [x] load library
+	- [x] some kind of process function
 - [ ] magnetometer (low priority)
 - [ ] gps (low priority)
 - [ ] arming logic -- Ram
