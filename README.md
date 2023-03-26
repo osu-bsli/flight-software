@@ -24,8 +24,8 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [ ] write functions to arm/disarm each board (will be called from telemetry.c)
 - [x] `data.c` -- Dersu
 	- [x] make data fields for all sensors
-- [ ] `process.c` -- Dersu
-	- [ ] call init functions
+- [x] `fc.c` -- Dersu
+	- [x] call init functions
 	- [x] call barometer process function
 	- [x] call telemetry process function
 	- [x] call recovery process function
