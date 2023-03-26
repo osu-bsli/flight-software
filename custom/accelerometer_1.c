@@ -31,8 +31,13 @@
 
 #define BW_RATE 0x2C
 #define POWER_CTL 0x2D
+#define INT_ENABLE 0x2D
 #define INT_SOURCE 0x30
 #define DATA_FORMAT 0x31
+#define ACCEL_DATA_BEGIN 0x32
+
+#define ADXLCS_Pin GPIO_PIN_4
+#define ADXLCS_GPIO_Port GPIOC
 
 #define handler hi2c
 
@@ -64,20 +69,21 @@ static void fs_accel1_read_register(uint8_t address, uint8_t *value,
   HAL_GPIO_WritePin(ADXLCS_GPIO_Port, ADXLCS_Pin, GPIO_PIN_SET);
 }
 
-void fs_accel1_init(ADXL_InitTypeDef *adxl) {
+void fs_accel1_init(void) {
   HAL_GPIO_WritePin(ADXLCS_GPIO_Port, ADXLCS_Pin, GPIO_PIN_SET);
   HAL_Delay(5);
   fs_accel1_write_register(BW_RATE, 0b00001100);
   fs_accel1_write_register(DATA_FORMAT, 0b00001011);
   fs_accel1_write_register(POWER_CTL, 0b00001011);
+  fs_accel1_write_register(INT_ENABLE, 0b1000000);
 }
 
-void fs_accel1_get_acceleration(float *data, uint8_t outputType) {
+void fs_accel1_get_acceleration(float *out_data) {
   uint8_t data[6];
-  fs_accel1_read_register(DATA0, data, 6);
-  data[0] = ((int16_t)((data[1] * 256 + data[0])));
-  data[1] = ((int16_t)((data[3] * 256 + data[2])));
-  data[2] = ((int16_t)((data[5] * 256 + data[4])));
+  fs_accel1_read_register(ACCEL_DATA_BEGIN, data, 6);
+  out_data[0] = ((int16_t)((data[1] * 256 + data[0])));
+  out_data[1] = ((int16_t)((data[3] * 256 + data[2])));
+  out_data[2] = ((int16_t)((data[5] * 256 + data[4])));
 }
 
 void fs_accel1_interrupt(void) {
