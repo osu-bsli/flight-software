@@ -61,6 +61,10 @@ void Error_Handler(void);
 #define TEST_LED_GPIO_Port GPIOB
 #define STATUS_LED_Pin GPIO_PIN_7
 #define STATUS_LED_GPIO_Port GPIOE
+#define USART_MODEM_TX_Pin GPIO_PIN_9
+#define USART_MODEM_TX_GPIO_Port GPIOA
+#define USART_MODEM_RX_Pin GPIO_PIN_10
+#define USART_MODEM_RX_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
