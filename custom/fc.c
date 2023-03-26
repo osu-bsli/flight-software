@@ -5,7 +5,7 @@
 
 void fc_init(FlightComputer *fc) {
 	fc_telemetry_init(fc);
-	fc_barometer_init();
+	fc_barometer_init(fc);
 }
 
 /*
@@ -13,6 +13,6 @@ void fc_init(FlightComputer *fc) {
  */
 void fc_process(FlightComputer *fc) {
 	fc_telemetry_process(fc);
-	fc_barometer_process();
+	fc_barometer_process(fc);
 	fc_recovery_process();
 }

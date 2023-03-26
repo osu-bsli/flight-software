@@ -1,7 +1,9 @@
 #ifndef FC_BAROMETER_H
 #define FC_BAROMETER_H
 
-void fc_barometer_init(void);
-void fc_barometer_process(void);
+#include "fc.h"
+
+void fc_barometer_init(FlightComputer *fc);
+void fc_barometer_process(FlightComputer *fc);
 
 #endif
