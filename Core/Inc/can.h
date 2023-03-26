@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "main.h"
 
-    
 /* USER CODE BEGIN Includes */
 #include <avr/io.h>
 #include <util/delay.h>

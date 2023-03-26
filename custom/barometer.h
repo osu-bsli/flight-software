@@ -31,9 +31,10 @@ SOFTWARE.
 #include "fc.h"
 #include "stm32l4xx_hal.h"
 #include "gpio.h"
+#include "main.h"
+#include "spi.h"
 #include <stdint.h>
 #include <math.h>
-#include <sys/time.h>
 
 /* MS5607 SPI COMMANDS */
 #define RESET_COMMAND                 0x1E
@@ -42,8 +43,8 @@ SOFTWARE.
 #define CONVERT_D2_COMMAND            0x50
 #define READ_ADC_COMMAND              0x00
 #define PRESSURE_SEA_LEVEL            101000
-#define BAROMETER_CSB_PORT            
-#define BAROMETER_CSB_PIN             
+#define BAROMETER_CSB_PORT            GPIOA
+#define BAROMETER_CSB_PIN             GPIO_PIN_4
 
 /* MS5607 Oversampling Ratio Enumeration*/
 typedef enum OSRFactors{
@@ -86,66 +87,6 @@ struct MS5607Readings{
 
 void fc_barometer_init(FlightComputer *fc);
 void fc_barometer_process(FlightComputer *fc);
-
-/**
- * @brief  Initializes MS5607 Sensor
- * @param  SPI Handle address
- * @param  GPIO Port Definition
- * @param  GPIO Pin
- * @retval Initialization status:
- *           - 0 or MS5607_STATE_FAILED: Was not abe to communicate with sensor
- *           - 1 or MS5607_STATE_READY: Sensor initialized OK and ready to use
- */
-MS5607StateTypeDef MS5607_Init(SPI_HandleTypeDef *, GPIO_TypeDef *, uint16_t);
-
-/**
- * @brief  Reads MS5607 PROM Content
- * @note   Must be called only on device initialization
- * @param  Address of promData structure instance
- * @retval None
- */
-void MS5607PromRead(struct promData *);
-
-/**
- * @brief  Reads uncompensated content from the MS5607 ADC
- * @note   Must be called before every convertion
- * @param  Address of MS5607 UncompensatedValues Structure
- * @retval None
- */
-void MS5607UncompensatedRead(struct MS5607UncompensatedValues *);
-
-/**
- * @brief  Converts uncompensated values into real world values using data from @ref promData and @ref MS5607UncompensatedValues
- * @note   Must be called after @ref MS5607UncompensatedRead
- * @param  Address of MS5607UncompensatedValues Structure
- * @param  Address of MS5607Readings Structure
- * @retval None
- */
-void MS5607Convert(struct MS5607UncompensatedValues *, struct MS5607Readings *);
-
-/**
- * @brief  Updates the readings from the sensor
- * @note   This function must be called each time you want new values from the sensor
- * @param  None
- * @retval None
- */
-void MS5607Update(void);
-
-/**
- * @brief  Gets the temperature reading from the last sensor update
- * @note   This function must be called after an @ref MS5607Update()
- * @param  None
- * @retval Temperature in celsius
- */
-double MS5607GetTemperatureC(void);
-
-/**
- * @brief  Gets the pressure reading from the last sensor update
- * @note   This function must be called after an @ref MS5607Update()
- * @param  None
- * @retval Pressure in Pascal
- */
-int32_t MS5607GetPressurePa(void);
 
 /**
  * @brief  Enables the chip select pin
