@@ -7,11 +7,47 @@
 #include "main.h"
 #include <stdint.h>
 
+/*
+ * altitude data buffer
+ */
+#define FC_PACKET_BUFFER_MAX_COUNT 10 // store up to 10 data points
+typedef struct FCPacketBuffer {
+	int size;
+	uint8_t bytes[FC_PACKET_BUFFER_MAX_COUNT];
+} FCPacketBuffer;
+
+void fc_packet_buffer_initialize(FCPacketBuffer *buffer) {
+	buffer->size = 0;
+}
+
+void fc_packet_buffer_dequeue(FCPacketBuffer *buffer) {
+	if (buffer->size <= 0) {
+		return;
+	}
+
+	int idx;
+	for (idx = 1; idx < buffer->size; idx++) {
+		buffer->bytes[idx - 1] = buffer->bytes[idx];
+	}
+	buffer->size -= 1;
+}
+
+void fc_packet_buffer_enqueue(FCPacketBuffer *buffer, uint8_t byte) {
+	// if the buffer has too many items, dequeue
+	if (buffer->size + 1 > FC_PACKET_BUFFER_MAX_COUNT) {
+		altitude_buffer_dequeue(buffer);
+	}
+
+	buffer->bytes[buffer->size] = byte;
+	buffer->size += 1;
+}
+
 void fc_telemetry_send_packet(uint8_t *packet_bytes, int packet_size) {
 	/* TODO: Use DMA mode to prevent blocking */
-	HAL_UART_Transmit(&huart1, packet_bytes, packet_size, 100);
+//	HAL_UART_Transmit(&huart1, packet_bytes, packet_size, 100);
 
 	/* TODO: Write to SD card */
+//	HAL_SPI_Transmit(&hspi3, packet_bytes, packet_size, 100);
 }
 
 void fc_telemetry_init(FlightComputer *fc) {
@@ -19,16 +55,7 @@ void fc_telemetry_init(FlightComputer *fc) {
 }
 
 /* avoiding sending repeat data by storing its timestamp each time */
-float latest_accelerometer_data_timestamp = 0.0f;
-float latest_barometer_data_timestamp = 0.0f;
 float latest_magnetometer_data_timestamp = 0.0f;
-float latest_gps_data_timestamp = 0.0f;
-float latest_board_temp_timestamp = 0.0f;
-float latest_board_voltage_timestamp = 0.0f;
-float latest_board_current_timestamp = 0.0f;
-float latest_battery_voltage_timestamp = 0.0f;
-float latest_magnetometer_timestamp = 0.0f;
-float latest_gyroscope_timestamp = 0.0f;
 
 void fc_telemetry_process(FlightComputer *fc) {
 	/* parse arming packets */

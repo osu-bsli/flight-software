@@ -4,12 +4,12 @@
 /*
  * altitude data buffer
  */
-#define ALTITUDE_BUFFER_MAX_COUNT 10 // store up to 10 data points
+#define FC_PACKET_BUFFER_MAX_COUNT 10 // store up to 10 data points
 #define ALTITUDE_BUFFER_MAX_TIME 5.0 // store up to 5 seconds of data
 typedef struct AltitudeBuffer {
 	int size;
-	float altitudes[ALTITUDE_BUFFER_MAX_COUNT];
-	float timestamps[ALTITUDE_BUFFER_MAX_COUNT]; // parallel with altitudes array
+	float altitudes[FC_PACKET_BUFFER_MAX_COUNT];
+	float timestamps[FC_PACKET_BUFFER_MAX_COUNT]; // parallel with altitudes array
 } AltitudeBuffer;
 
 void altitude_buffer_initialize(AltitudeBuffer *buffer) {
@@ -32,7 +32,7 @@ void altitude_buffer_dequeue(AltitudeBuffer *buffer) {
 void altitude_buffer_enqueue(AltitudeBuffer *buffer, float altitude, float timestamp) {
 
 	// if the buffer has too many items, dequeue
-	if (buffer->size + 1 > ALTITUDE_BUFFER_MAX_COUNT) {
+	if (buffer->size + 1 > FC_PACKET_BUFFER_MAX_COUNT) {
 		altitude_buffer_dequeue(buffer);
 	}
 
