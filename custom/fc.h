@@ -12,4 +12,14 @@ typedef struct FlightComputer {
 	FCDataGPSPoint latest_gps_data;
 } FlightComputer;
 
+/*
+ * Initialization.
+ */
+void fc_init(FlightComputer *fc);
+
+/*
+ * Main process loop.
+ */
+void fc_process(FlightComputer *fc);
+
 #endif

@@ -1,8 +1,7 @@
-#include "process.h"
+#include "fc.h"
 #include "telemetry.h"
 #include "barometer.h"
 #include "recovery.h"
-#include "fc.h"
 
 void fc_init(FlightComputer *fc) {
 	fc_telemetry_init(fc);
