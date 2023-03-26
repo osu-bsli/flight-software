@@ -27,6 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fc.h"
 #include "process.h"
 /* USER CODE END Includes */
 
@@ -78,7 +79,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  fc_init();
+  FlightComputer fc;
+  fc_init(&fc);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -121,7 +123,7 @@ int main(void)
 		  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
 	  }
 
-	  fc_process();
+	  fc_process(&fc);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
