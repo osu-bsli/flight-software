@@ -35,7 +35,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [ ] confirm if all gps data (position, speed, sat count) is received at once
 	- [ ] process function
 		- [ ] parse packets
-		- [ ] read from `data.h` and send data packets
+		- [x] read from `data.h` and send data packets
 		- [ ] write those packets to the SD card -- Peter
 	- [ ] tests
 - [ ] recovery
