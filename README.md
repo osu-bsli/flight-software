@@ -31,7 +31,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [x] call recovery process function
 - [ ] telemetry -- Dersu
 	- [x] load the packet parsing library we made
-	- [ ] implement arming commands in packet-parser
+	- [x] implement arming commands in packet-parser
 	- [ ] confirm if all gps data (position, speed, sat count) is received at once
 	- [ ] process function
 		- [ ] parse packets
