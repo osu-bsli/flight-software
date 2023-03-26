@@ -42,8 +42,8 @@ SOFTWARE.
 #define CONVERT_D2_COMMAND            0x50
 #define READ_ADC_COMMAND              0x00
 #define PRESSURE_SEA_LEVEL            101000
-#define BAROMETER_CSB_PORT           
-#define BAROMETER_CSB_PIN             3
+#define BAROMETER_CSB_PORT            
+#define BAROMETER_CSB_PIN             
 
 /* MS5607 Oversampling Ratio Enumeration*/
 typedef enum OSRFactors{
