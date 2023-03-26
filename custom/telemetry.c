@@ -105,9 +105,9 @@ void fc_telemetry_process(FlightComputer *fc) {
 	packet_size = write_arming_status_packet(
 			packet_bytes,
 			((float) HAL_GetTick()) / 1000.0f,
-			fc_arming_is_accelerometer_1_armed(),
-			fc_arming_is_accelerometer_2_armed(),
-			fc_arming_is_barometer_armed());
+			fc_arming_is_primary_fc_armed(),
+			fc_arming_is_secondary_fc_armed(),
+			fc_arming_is_camera_armed());
 	fc_telemetry_send_packet(packet_bytes, packet_size);
 
 	/* TODO: Split altitude packets to handle each sensor separately */
