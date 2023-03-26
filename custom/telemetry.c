@@ -1,6 +1,7 @@
 #include "telemetry.h"
 #include "data.h"
 #include "fc.h"
+#include "arming.h"
 #include "packet-parser/parser.h"
 #include "packet-parser/packet.h"
 #include <stdint.h>
@@ -34,6 +35,15 @@ void fc_telemetry_process(FlightComputer *fc) {
 	int packet_size = 0;
 
 	/* TODO: Make packet sending atomic */
+
+	/* write arming status packets every time? */
+	packet_size = write_arming_status_packet(
+			packet_bytes,
+			((float) HAL_GetTick()) / 1000.0f,
+			fc_arming_is_accelerometer_1_armed(),
+			fc_arming_is_accelerometer_2_armed(),
+			fc_arming_is_barometer_armed());
+	fc_telemetry_send_packet(packet_bytes, packet_size);
 
 	/* TODO: Split altitude packets to handle each sensor separately */
 	if (latest_barometer_data_timestamp < fc->data.barometer_timestamp) {
