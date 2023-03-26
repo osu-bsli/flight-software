@@ -19,16 +19,7 @@ void fc_telemetry_init(FlightComputer *fc) {
 }
 
 /* avoiding sending repeat data by storing its timestamp each time */
-float latest_accelerometer_data_timestamp = 0.0f;
-float latest_barometer_data_timestamp = 0.0f;
 float latest_magnetometer_data_timestamp = 0.0f;
-float latest_gps_data_timestamp = 0.0f;
-float latest_board_temp_timestamp = 0.0f;
-float latest_board_voltage_timestamp = 0.0f;
-float latest_board_current_timestamp = 0.0f;
-float latest_battery_voltage_timestamp = 0.0f;
-float latest_magnetometer_timestamp = 0.0f;
-float latest_gyroscope_timestamp = 0.0f;
 
 void fc_telemetry_process(FlightComputer *fc) {
 	/* parse arming packets */
