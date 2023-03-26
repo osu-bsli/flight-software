@@ -35,7 +35,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [x] implement arming commands in packet-parser
 	- [ ] confirm if all gps data (position, speed, sat count) is received at once
 	- [ ] process function
-		- [ ] parse packets
+		- [x] parse packets
 		- [x] read from `data.h` and send data packets
 		- [ ] write those packets to the SD card -- Peter
 	- [ ] tests
