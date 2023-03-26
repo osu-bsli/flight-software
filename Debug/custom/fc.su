@@ -1,0 +1,2 @@
+../custom/fc.c:6:6:fc_init	16	static
+../custom/fc.c:14:6:fc_process	16	static

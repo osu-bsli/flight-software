@@ -1,0 +1,2 @@
+../lib/packet-parser/crc.c:14:10:calculate_crc	32	static
+../lib/packet-parser/crc.c:40:5:validate_crc	24	static

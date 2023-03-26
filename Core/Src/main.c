@@ -24,6 +24,7 @@
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
+#include "accelerometer_1.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -181,7 +182,13 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == GPIO_PIN_15) {
+	  fs_accel1_interrupt();
+  } else {
+      __NOP();
+  }
+}
 /* USER CODE END 4 */
 
 /**

@@ -62,8 +62,8 @@ all: main-build
 main-build: flight-software.elf secondary-outputs
 
 # Tool invocations
-flight-software.elf flight-software.map: $(OBJS) $(USER_OBJS) C:\Users\dersu\projects\bsli\flight-software\STM32L4P5VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "flight-software.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\dersu\projects\bsli\flight-software\STM32L4P5VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="flight-software.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+flight-software.elf flight-software.map: $(OBJS) $(USER_OBJS) C:\Users\ayden\flight-software\STM32L4P5VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "flight-software.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\ayden\flight-software\STM32L4P5VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="flight-software.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
