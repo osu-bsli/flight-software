@@ -1,0 +1,2 @@
+../custom/barometer.c:4:6:fc_barometer_init	16	static
+../custom/barometer.c:8:6:fc_barometer_process	16	static

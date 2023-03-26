@@ -1,0 +1,4 @@
+recovery.c:14:6:altitude_buffer_initialize	1
+recovery.c:18:6:altitude_buffer_dequeue	3
+recovery.c:31:6:altitude_buffer_enqueue	5
+recovery.c:58:6:fc_recovery_process	1
