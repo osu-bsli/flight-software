@@ -28,6 +28,8 @@
 
 #include "accelerometer_1.h"
 #include "stm32l4xx_hal.h"
+#include "packet-parser/packet.h"
+#include "telemetry.h"
 
 #define BW_RATE 0x2C
 #define POWER_CTL 0x2D
@@ -90,7 +92,8 @@ void fs_accel1_interrupt(void) {
   uint8_t reg = 0;
   while (1) {
     if (fs_accel1_interrupt_data_available()) {
-    	// write to data.c
+    	/* call write_acceleration_packet() from packet-parser/packet.h */
+    	/* call fc_telemetry_send_packet() from telemetry.h */
     }
   }
 }

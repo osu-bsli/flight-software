@@ -4,11 +4,14 @@
 #include "arming.h"
 #include "packet-parser/parser.h"
 #include "packet-parser/packet.h"
+#include "main.h"
 #include <stdint.h>
 
-static void fc_telemetry_send_packet(uint8_t *packet_bytes, int packet_size) {
+void fc_telemetry_send_packet(uint8_t *packet_bytes, int packet_size) {
 	/* TODO: Use DMA mode to prevent blocking */
-	/* HAL_UART_Transmit(???, packet_bytes, packet_size, Timeout); */
+	HAL_UART_Transmit(&huart1, packet_bytes, packet_size, 100);
+
+	/* TODO: Write to SD card */
 }
 
 void fc_telemetry_init(FlightComputer *fc) {
