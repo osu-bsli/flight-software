@@ -31,6 +31,9 @@
 #include "packet-parser/packet.h"
 #include "telemetry.h"
 #include "i2c.h"
+#include "data.h"
+#include "main.h"
+#include "fc.h"
 
 #define ACCEL1_DEVID 0xE5
 #define BW_RATE 0x2C
@@ -110,6 +113,10 @@ void fs_accel1_interrupt(void) {
 		  acceleration[1],
 		  acceleration[2]
 	  );
-	  fc_telemetry_send_packet(output, packet_size);
+
+	  /* TODO: Write to fc data */
+//	  FlightComputer *fc = fc_get_fc();
+//	  fc->data.????
+//	  fc_telemetry_send_packet(output, packet_size);
   }
 }

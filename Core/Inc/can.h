@@ -29,13 +29,13 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-#include <avr/io.h>
-#include <util/delay.h>
-#include <avr/interrupt.h>
-#include <util/atomic.h>
-#include "mcc_generated_files/mcc.h"
-#include "CAN_ADDRESS_DEFINITION.h"
-#include "main.h"
+//#include <avr/io.h>
+//#include <util/delay.h>
+//#include <avr/interrupt.h>
+//#include <util/atomic.h>
+//#include "mcc_generated_files/mcc.h"
+//#include "CAN_ADDRESS_DEFINITION.h"
+//#include "main.h"
 /* USER CODE END Includes */
 
 extern CAN_HandleTypeDef hcan1;

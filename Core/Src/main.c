@@ -60,7 +60,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+FlightComputer fc;
 
+FlightComputer *fc_get_fc() {
+	return &fc;
+}
 /* USER CODE END 0 */
 
 /**
@@ -79,7 +83,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  FlightComputer fc;
   fc_init(&fc);
   /* USER CODE END Init */
 

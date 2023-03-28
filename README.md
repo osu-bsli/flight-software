@@ -45,3 +45,7 @@ Needs to be done this Sunday (2023-03-26) at the latest!
 	- [ ] filtering -- Peter
 	- [ ] recovery decision -- Peter
 	- [ ] tests
+
+## TODO 2
+- [ ] inside sensor interrupts, write data to data.c
+	
