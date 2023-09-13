@@ -1,4 +1,0 @@
-#ifndef FC_ACCELEROMETER_2_H
-#define FC_ACCELEROMETER_2_H
-
-#endif
