@@ -66,3 +66,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
     # Add user defined libraries
 )
+
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
+    -Wimplicit-fallthrough
+    -Werror=implicit-function-declaration
+)

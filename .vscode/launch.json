@@ -18,7 +18,7 @@
             "coreConfigs": [
                 {
                     "coreIndex": 0,
-                    "programBinary": "./build/Debug/flight-software-template.elf"
+                    "programBinary": "./build/flight-software-template.elf"
                 }
             ]
         },
