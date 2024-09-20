@@ -3,6 +3,7 @@
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
+#include "External/RTT/SEGGER_RTT.h"
 
 /**
  * task_main.c
@@ -14,8 +15,14 @@
  * provide the stack buffer, task buffer, and initialization code.
  */
 
+void initialize(void) {
+  SEGGER_RTT_printf(0, "Hello World from BSLI!\n");
+}
+
 void task_main(void const *argument) {
   UNUSED(argument);
+
+  initialize();
 
   task_blinky_start();
 
