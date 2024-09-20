@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<mavlink>
+    <dialect>0</dialect>
+
+    <enums>
+        <enum name="STATUS_FLAGS">
+            <description>Type of landing target</description>
+            <entry value="1" name="STATUS_FLAGS_EMATCH_DROGUE_DEPLOYED">
+                <description>eMatch ignited to deploy the drogue parachute</description>
+            </entry>
+            <entry value="2" name="STATUS_FLAGS_EMATCH_MAIN_DEPLOYED">
+                <description>eMatch ignited to deploy the main parachute</description>
+            </entry>
+            <entry value="4" name="STATUS_FLAGS_ARMED">
+                <description>Rocket is armed</description>
+            </entry>
+        </enum>
+    </enums>
+
+    <messages>
+        <message id="100" name="status_flags">
+            <description>Status flags</description>
+            <field type="uint32_t" name="status_flags" enum="STATUS_FLAGS">Status Flags</field>
+        </message>
+
+        <message id="101" name="MS5607">
+            <description>MS5607 barometer</description>
+            <field type="float" name="pressure" units="mbar">Air Pressure</field>
+            <field type="float" name="temperature" units="degC">Temperature</field>
+        </message>
+
+        <message id="102" name="BMI323">
+            <description>BMI323 inertial measurement unit</description>
+            <field type="uint32_t" name="time" units="ms">Time</field>
+            <field type="float" name="acc_x" units="g">Acceleration X</field>
+            <field type="float" name="acc_y" units="g">Acceleration Y</field>
+            <field type="float" name="acc_z" units="g">Acceleration Z</field>
+            <field type="float" name="gyr_x" units="deg/s">Gyroscope X</field>
+            <field type="float" name="gyr_y" units="deg/s">Gyroscope Y</field>
+            <field type="float" name="gyr_z" units="deg/s">Gyroscope Z</field>
+        </message>
+
+        <message id="103" name="ADXL375">
+            <description>ADXL375 3-axis accelerometer</description>
+            <field type="uint32_t" name="time" units="ms">Time</field>
+            <field type="float" name="acc_x" units="g">Acceleration X</field>
+            <field type="float" name="acc_y" units="g">Acceleration Y</field>
+            <field type="float" name="acc_z" units="g">Acceleration Z</field>
+        </message>
+
+        <message id="104" name="airbrakes">
+            <description>Airbrakes</description>
+            <field type="uint32_t" name="time" units="ms">Time</field>
+            <field type="float" name="velocity" units="m/s">Velocity</field>
+            <field type="float" name="velocity_vertical" units="m/s">Velocity Vertical</field>
+            <field type="float" name="altitude" units="m">Altitude</field>
+            <field type="float" name="air_density" units="mbar">Air Density</field>
+            <field type="float" name="pitch" units="rad">Pitch</field>
+            <field type="float" name="acceleration" units="g">Acceleration</field>
+            <field type="float" name="temperature" units="degC">Temperature</field>
+            <field type="float" name="current_airbrake_angle" units="rad">Current Airbrake Angle</field>
+            <field type="float" name="current_cross_sectional_area" units="cm^2">Current Cross-Sectional Area</field>
+            <field type="float" name="current_drag" units="g">Current Drag</field>
+        </message>
+
+        <message id="105" name="power">
+            <description>Power board status</description>
+            <field type="float" name="vs_3v3" units="V">3.3V Rail Voltage</field>
+            <field type="float" name="vs_5v" units="V">5v Rail Voltage</field>
+            <field type="float" name="vs_bat" units="V">Battery Voltage</field>
+            <field type="float" name="cs_3v3" units="V">3.3V Rail Current</field>
+            <field type="float" name="cs_5v" units="V">5v Rail Current</field>
+            <field type="float" name="cs_bat" units="V">Battery Current</field>
+        </message>
+    </messages>
+
+</mavlink>
