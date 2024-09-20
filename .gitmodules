@@ -1,0 +1,3 @@
+[submodule "External/mavlink"]
+	path = External/mavlink
+	url = https://github.com/mavlink/mavlink

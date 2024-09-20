@@ -34,6 +34,35 @@ enable_language(C ASM)
 project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
+#
+# MAVLINK HANDLING
+#
+find_package(Python 3.7...<3.12 COMPONENTS Interpreter REQUIRED)
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mavlink_dependencies/
+        COMMAND ${Python_EXECUTABLE}
+        -m pip install -r ${CMAKE_CURRENT_SOURCE_DIR}/External/mavlink/pymavlink/requirements.txt
+        -t ${CMAKE_CURRENT_BINARY_DIR}/mavlink_dependencies/
+)
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/Src/mavlink_generated/mavlink_packets/mavlink.h
+
+        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/mavlink_dependencies/"
+        ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/External/mavlink/pymavlink/tools/mavgen.py
+        -o ${CMAKE_CURRENT_SOURCE_DIR}/Src/mavlink_generated/
+        --lang C
+        --strict-units
+        --wire-protocol 2.0
+        "${CMAKE_CURRENT_SOURCE_DIR}/mavlink_packets.xml"
+        DEPENDS
+        mavlink_packets.xml
+        External/mavlink
+        ${CMAKE_CURRENT_BINARY_DIR}/mavlink_dependencies/
+        BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/Src/mavlink_generated/
+)
+
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
 
@@ -48,6 +77,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+
+    # Generated mavlink headers
+    Src/mavlink_generated/mavlink_packets/mavlink.h
 )
 
 # Add include paths
