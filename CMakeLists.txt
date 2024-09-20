@@ -78,6 +78,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Src/Tasks/task_main.c
+    Src/Tasks/task_blinky.c
 
     # Generated mavlink headers
     Src/mavlink_generated/mavlink_packets/mavlink.h
