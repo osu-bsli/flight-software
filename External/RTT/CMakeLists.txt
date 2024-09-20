@@ -1,0 +1,6 @@
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    SEGGER_RTT_ASM_ARMv7M.s
+    SEGGER_RTT_printf.c
+    SEGGER_RTT.c
+    SEGGER_RTT.h
+)
