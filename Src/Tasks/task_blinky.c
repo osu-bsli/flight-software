@@ -1,5 +1,7 @@
 #include "main.h"
+#include "stm32h7xx_hal_conf.h"
 #include "stm32h7xx_hal_gpio.h"
+#include "Src/flight_software.h"
 #include "tasks.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
@@ -60,15 +62,16 @@ void task_blinky_start(void) {
    * Non-local variables are zero-initialized on startup so handle will
    * always be NULL when this function is called for the first time.
    */
-  if (handle == NULL) {
-    /* Create the task without using any dynamic memory allocation. */
-    handle = xTaskCreateStatic(
-        task,             /* Function that implements the task. */
-        "blinky",         /* Text name for the task. */
-        STACK_SIZE,       /* Number of indexes in the xStack array. */
-        NULL,             /* Parameter passed into the task. */
-        tskIDLE_PRIORITY, /* Priority at which the task is created. */
-        stack,            /* Array to use as the task's stack. */
-        &tcb);            /* Variable to hold the task's data structure. */
-  }
+
+  ASSERT(handle == NULL);
+
+  /* Create the task without using any dynamic memory allocation. */
+  handle = xTaskCreateStatic(
+      task,             /* Function that implements the task. */
+      "blinky",         /* Text name for the task. */
+      STACK_SIZE,       /* Number of indexes in the xStack array. */
+      NULL,             /* Parameter passed into the task. */
+      tskIDLE_PRIORITY, /* Priority at which the task is created. */
+      stack,            /* Array to use as the task's stack. */
+      &tcb);            /* Variable to hold the task's data structure. */
 }

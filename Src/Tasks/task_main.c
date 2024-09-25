@@ -9,7 +9,7 @@
  * task_main.c
  *
  * The ONLY purpose of this task will be to perform basic initialization and
- * call other task start functions.
+ * call other task start functions, then suspend itself.
  *
  * This is the only task where we are using STM32CubeMX generated code to
  * provide the stack buffer, task buffer, and initialization code.
