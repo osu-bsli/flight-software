@@ -1,8 +1,4 @@
 {
-    "files.associations": {
-        "fc_data_processing.h": "c",
-        "cmsis_os.h": "c"
-    },
     "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
     "clangd.arguments": ["--query-driver=**arm-none-eabi-g*"]
 }

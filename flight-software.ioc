@@ -1,6 +1,6 @@
 #MicroXplorer Configuration settings - do not modify
-CAD.formats=
-CAD.pinconfig=
+CAD.formats=[]
+CAD.pinconfig=Dual
 CAD.provider=
 CORTEX_M7.IPParameters=default_mode_Activation
 CORTEX_M7.default_mode_Activation=1
@@ -136,7 +136,7 @@ ProjectManager.DeletePrevious=true
 ProjectManager.DeviceId=STM32H753IITx
 ProjectManager.FirmwarePackage=STM32Cube FW_H7 V1.11.2
 ProjectManager.FreePins=false
-ProjectManager.HalAssertFull=false
+ProjectManager.HalAssertFull=true
 ProjectManager.HeapSize=0x200
 ProjectManager.KeepUserCode=true
 ProjectManager.LastFirmware=true
