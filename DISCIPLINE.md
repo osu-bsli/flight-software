@@ -137,7 +137,10 @@ HAL_StatusTypeDef lis3dh_initialize(void) {
 }
 ```
 
-### Check all return values of functions that can fail. **Improperly handled sensor failures could result in serious consequences, such as failure to deploy parachute and loss of vehicle.**
+### Check all return values of functions that can fail. 
+
+> [!CAUTION]
+> **Improperly handled sensor failures could result in serious consequences, such as failure to deploy parachute and loss of vehicle.**
 
 ```c
 HAL_StatusTypeDef spi_write(const uint8_t *data, const uint16_t data_len) {
