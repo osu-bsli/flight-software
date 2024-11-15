@@ -3,3 +3,9 @@ build/
 compile_commands.json
 
 Src/mavlink_generated
+Core/Inc/rust_bindings.h
+*.map
+
+# Added by cargo
+
+/target

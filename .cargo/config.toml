@@ -1,0 +1,6 @@
+[target.thumbv7em-none-eabihf]
+runner = 'probe-rs run --chip STM32H753IITx'
+linker = 'arm-none-eabi-gcc'
+
+[build]
+target = "thumbv7em-none-eabihf"

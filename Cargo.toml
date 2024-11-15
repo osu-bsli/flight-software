@@ -1,0 +1,12 @@
+[package]
+name = "flight-software"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+micromath = "2.1.0"
+
+[build-dependencies]
+cbindgen = "0.27.0"
+cc = "1.2.1"
+cmake = "0.1.51"
