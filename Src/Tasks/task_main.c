@@ -19,7 +19,15 @@
 void initialize(void) {
   SEGGER_RTT_printf(0, "Hello World from BSLI!\n");
 
-  uint32_t are_we_linking = airbrake_calculate(123.45, 54.321);
+  AirbrakeData a = {
+    .altitude = 123.45,
+    .angle = 40,
+    .speed = 54.321
+  };
+
+  uint32_t are_we_linking = airbrake_calculate(&a);
+
+  SEGGER_RTT_printf(0, "Rust/C interop test: %i\n", are_we_linking);
 }
 
 void task_main(void const *argument) {
