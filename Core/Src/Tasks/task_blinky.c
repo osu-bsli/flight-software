@@ -1,8 +1,8 @@
 #include "main.h"
 #include "stm32h7xx_hal_conf.h"
 #include "stm32h7xx_hal_gpio.h"
-#include "Src/flight_software.h"
-#include "tasks.h"
+#include "flight_software.h"
+#include "Tasks/tasks.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>

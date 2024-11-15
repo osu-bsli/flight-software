@@ -8,7 +8,7 @@ fn main() {
      */
 
     cbindgen::Builder::new()
-        .with_src("src/main.rs")
+        .with_src("Core/Src/main.rs")
         .with_language(cbindgen::Language::C)
         .with_cpp_compat(true)
         .generate()
