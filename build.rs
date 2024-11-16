@@ -26,25 +26,32 @@ fn main() {
      */
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
-    println!("cargo::rustc-link-lib=c-code");
+    println!("cargo::rustc-link-lib=flight-software-c");
 
     /*
      * Linker arguments. (copy-pasted from cmake/gcc-arm-none-eabi.cmake)
      */
 
     let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
-    println!("cargo::rustc-link-arg=-mcpu=cortex-m7");
-    println!("cargo::rustc-link-arg=-mfpu=fpv5-d16");
-    println!("cargo::rustc-link-arg=-mfloat-abi=hard");
-    println!("cargo::rustc-link-arg=-Wl,-Map={}.map", pkg_name);
-    println!("cargo::rustc-link-arg=-TSTM32H753IITx_FLASH.ld");
-    println!("cargo::rustc-link-arg=--specs=nano.specs");
-    println!("cargo::rustc-link-arg=-Wl,--gc-sections");
-    println!("cargo::rustc-link-arg=-Wl,--start-group");
-    println!("cargo::rustc-link-arg=-lc");
-    println!("cargo::rustc-link-arg=-lm");
-    println!("cargo::rustc-link-arg=-Wl,--end-group");
-    println!("cargo::rustc-link-arg=-Wl,--print-memory-usage");
+
+    let linker_args = [
+        "-mcpu=cortex-m7",
+        "-mfpu=fpv5-d16",
+        "-mfloat-abi=hard",
+        &format!("-Wl,-Map={pkg_name}.map"),
+        "-TSTM32H753IITx_FLASH.ld",
+        "--specs=nano.specs",
+        "-Wl,--gc-sections",
+        "-Wl,--start-group",
+        "-lc",
+        "-lm",
+        "-Wl,--end-group",
+        "-Wl,--print-memory-usage",
+    ];
+    
+    for a in linker_args {
+        println!("cargo::rustc-link-arg={a}");
+    }
 
     /* Copy compile_commands.json to root directory for clangd VSCode extension */
     let mut compile_commands_path = dst.clone();

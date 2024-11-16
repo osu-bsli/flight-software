@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME c-code)
+set(CMAKE_PROJECT_NAME flight-software-c)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
