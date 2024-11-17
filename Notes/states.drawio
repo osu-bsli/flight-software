@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" version="24.8.6">
+  <diagram name="Page-1" id="nMvd9GRwyNyRrm7jmAEz">
+    <mxGraphModel dx="967" dy="506" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="RecyCZqGc3tlNa3PziZy-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="RecyCZqGc3tlNa3PziZy-1" target="RecyCZqGc3tlNa3PziZy-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-1" value="GROUND /&amp;nbsp;&lt;div&gt;or any other state&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="570" width="135" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-37" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="RecyCZqGc3tlNa3PziZy-2" target="RecyCZqGc3tlNa3PziZy-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-2" value="MOTOR_BURNING" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="580" width="160" height="60" as="geometry" />
+        </mxCell>
+        <UserObject label="4.0G acceleration for 1 second toward the flight direction, corroborated with a rapid pressure drop." placeholders="1" name="Variable" id="RecyCZqGc3tlNa3PziZy-15">
+          <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="1">
+            <mxGeometry x="455" y="500" width="120" height="120" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Drop under 1.0G acceleration for 1 second." placeholders="1" name="Variable" id="RecyCZqGc3tlNa3PziZy-16">
+          <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="1">
+            <mxGeometry x="670" y="650" width="120" height="50" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="RecyCZqGc3tlNa3PziZy-17" target="RecyCZqGc3tlNa3PziZy-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-17" value="AIRBRAKING" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="587.5" y="720" width="165" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="RecyCZqGc3tlNa3PziZy-20" target="RecyCZqGc3tlNa3PziZy-26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-20" value="DROGUE_DEPLOYED" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="720" width="160" height="60" as="geometry" />
+        </mxCell>
+        <UserObject label="At apogee." placeholders="1" name="Variable" id="RecyCZqGc3tlNa3PziZy-25">
+          <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="1">
+            <mxGeometry x="430" y="690" width="170" height="90" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="RecyCZqGc3tlNa3PziZy-26" value="MAIN_DEPLOYED" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="10" y="720" width="160" height="60" as="geometry" />
+        </mxCell>
+        <UserObject label="Below 2000 ft." placeholders="1" name="Variable" id="RecyCZqGc3tlNa3PziZy-28">
+          <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="1">
+            <mxGeometry x="140" y="690" width="170" height="90" as="geometry" />
+          </mxCell>
+        </UserObject>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
