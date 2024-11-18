@@ -23,10 +23,19 @@ fn main() {
 
     /*
      * Link the C code static library.
+     *
+     * IMPORTANT: THE C CODE HAS TO BE LINKED AS whole-archive.
+     * IMPORTANT:
+     * IMPORTANT: https://en.wikipedia.org/wiki/Weak_symbol#Limitations
+     * IMPORTANT: > Using weak symbols in static libraries has other semantics than in shared ones,
+     * IMPORTANT: > i.e. with a static library the symbol lookup stops at the first symbol –
+     * IMPORTANT: > even if it is just weak and an object file with a strong symbol is also
+     * IMPORTANT: > included in the library archive. On Linux, the linker option --whole-archive
+     * IMPORTANT: > changes that behavior.
      */
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
-    println!("cargo::rustc-link-lib=flight-software-c");
+    println!("cargo::rustc-link-lib=static:+whole-archive=flight-software-c");
 
     /*
      * Linker arguments. (copy-pasted from cmake/gcc-arm-none-eabi.cmake)
@@ -48,7 +57,7 @@ fn main() {
         "-Wl,--end-group",
         "-Wl,--print-memory-usage",
     ];
-    
+
     for a in linker_args {
         println!("cargo::rustc-link-arg={a}");
     }
