@@ -1,5 +1,5 @@
 [target.thumbv7em-none-eabihf]
-runner = 'probe-rs run --chip STM32H753IITx'
+runner = 'probe-rs run --chip STM32H753IITx --connect-under-reset'
 linker = 'arm-none-eabi-gcc'
 
 [build]
