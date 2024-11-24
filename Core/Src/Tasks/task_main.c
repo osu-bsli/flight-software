@@ -1,5 +1,6 @@
 #include "stm32h7xx_hal.h"
 #include "Tasks/task_blinky.h"
+#include "Tasks/task_sensors.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
@@ -35,6 +36,7 @@ void task_main(void const *argument) {
 
   initialize();
 
+  task_sensors_start();
   task_blinky_start();
 
   // Suspend the main task.

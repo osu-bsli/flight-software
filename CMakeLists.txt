@@ -53,6 +53,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/Tasks/task_main.c
     Core/Src/Tasks/task_blinky.c
+    Core/Src/Tasks/task_sensors.c
 )
 
 # Add include paths
