@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define GPIO_OUT_LED_GREEN_GPIO_Port GPIOD
 #define GPIO_OUT_LED_RED_Pin GPIO_PIN_13
 #define GPIO_OUT_LED_RED_GPIO_Port GPIOD
+#define SDMMC1_CARD_DETECT_Pin GPIO_PIN_1
+#define SDMMC1_CARD_DETECT_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 
