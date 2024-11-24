@@ -27,7 +27,7 @@ void initialize(void) {
 
   uint32_t are_we_linking = airbrake_calculate(&a);
 
-  SEGGER_RTT_printf(0, "Rust/C interop test: %i\n", are_we_linking);
+  SEGGER_RTT_printf(0, "Rust/C interop test: %d\n", are_we_linking);
 }
 
 void task_main(void const *argument) {

@@ -39,7 +39,7 @@ static StackType_t stack[STACK_SIZE];
  * @param argument Passed in from the xTaskCreateStatic() call below, but in
  * this case, a NULL value is passed in.
  */
-static void task(void *argument) {
+static void task_blinky(void *argument) {
   /* Suppress unused argument warning with UNUSED macro. */
   UNUSED(argument);
 
@@ -67,7 +67,7 @@ void task_blinky_start(void) {
 
   /* Create the task without using any dynamic memory allocation. */
   handle = xTaskCreateStatic(
-      task,             /* Function that implements the task. */
+      task_blinky,             /* Function that implements the task. */
       "blinky",         /* Text name for the task. */
       STACK_SIZE,       /* Number of indexes in the xStack array. */
       NULL,             /* Parameter passed into the task. */
