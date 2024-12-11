@@ -8,7 +8,7 @@ Prescaler: $0 - 2^{16}$ (Unitless value to scale the system timer clock)
 
 Counter Period
 
-Pulse: > pulse, output on; < pulse, output off.
+Pulse: < pulse, output on; > pulse, output off.
 
 $T$: Period
 
