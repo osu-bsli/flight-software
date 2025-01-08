@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <task.h>
 #include "External/RTT/SEGGER_RTT.h"
-#include "rust_bindings.h"
 
 /**
  * task_main.c
@@ -19,16 +18,6 @@
 
 void initialize(void) {
   SEGGER_RTT_printf(0, "Hello World from BSLI!\n");
-
-  AirbrakeData a = {
-    .altitude = 123.45,
-    .angle = 40,
-    .speed = 54.321
-  };
-
-  uint32_t are_we_linking = airbrake_calculate(&a);
-
-  SEGGER_RTT_printf(0, "Rust/C interop test: %d\n", are_we_linking);
 }
 
 void task_main(void const *argument) {
