@@ -232,4 +232,8 @@ clean:
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
 
+
+run: all
+	probe-rs run --chip STM32H753IITx ./build/$(TARGET).elf
+
 # *** EOF ***
