@@ -162,8 +162,8 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FatFs/src \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
--I.
-
+-IExternal/mavlink/ \
+-IExternal/RTT/
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -238,8 +238,11 @@ clean:
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
 
-
+.PHONY: run check
 run: all
 	probe-rs run --chip STM32H753IITx ./build/$(TARGET).elf
+
+check:
+	cppcheck --quiet --force Core
 
 # *** EOF ***

@@ -4,7 +4,7 @@
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
-#include "External/RTT/SEGGER_RTT.h"
+#include <SEGGER_RTT.h>
 
 /**
  * task_main.c

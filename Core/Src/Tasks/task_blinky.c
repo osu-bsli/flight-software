@@ -1,7 +1,5 @@
-#include "main.h"
-#include "stm32h7xx_hal_conf.h"
-#include "stm32h7xx_hal_gpio.h"
 #include "flight_software.h"
+#include "main.h"
 #include "Tasks/tasks.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
@@ -23,13 +21,13 @@
 /* Structure that will hold the handle of the task being created. */
 static TaskHandle_t handle;
 
-/* Structure that will hold the TCB of the task being created. */
+/* Structure that will hold the TCB (task metadata) of the task being created. */
 static StaticTask_t tcb;
 
 /*
  * Array that the task being created will use as its stack. Note this is
  * an array of StackType_t variables. The size of StackType_t is dependent on
- * the RTOS port.
+ * the platform. On ARM-based platforms (i.e. STM32), StackType_t is .
  */
 static StackType_t stack[STACK_SIZE];
 

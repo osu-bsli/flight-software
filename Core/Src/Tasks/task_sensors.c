@@ -1,7 +1,7 @@
-#include "External/RTT/SEGGER_RTT.h"
+#include <SEGGER_RTT.h>
+#include "flight_software.h"
 #include "Sensors/adxl375.h"
 #include "Tasks/tasks.h"
-#include "flight_software.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>

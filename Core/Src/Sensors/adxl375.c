@@ -10,7 +10,7 @@
  */
 
 #include "Sensors/adxl375.h"
-#include "External/RTT/SEGGER_RTT.h"
+#include <SEGGER_RTT.h>
 #include "common.h"
 #include "stm32h7xx_hal.h"
 #include <cmsis_os.h>

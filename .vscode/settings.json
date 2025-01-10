@@ -1,7 +1,9 @@
 {
-    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
-    "clangd.arguments": [
-        "--query-driver=**arm-none-eabi-g*"
-    ],
-    "C_Cpp.intelliSenseEngine": "disabled"
+    "files.associations": {
+        "stm32h7xx_hal_gpio.h": "c",
+        "main.h": "c",
+        "flight_software.h": "c",
+        "stm32h7xx_hal.h": "c",
+        "adxl375.h": "c"
+    }
 }
