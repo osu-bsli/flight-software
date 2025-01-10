@@ -163,7 +163,8 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
 -IExternal/mavlink/ \
--IExternal/RTT/
+-IExternal/RTT/ \
+-I$(BUILD_DIR)/mavlink_generated/
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -214,7 +215,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+$(BUILD_DIR)/$(TARGET).elf: $(BUILD_DIR)/mavlink_generated/mavlink_packets/mavlink.h $(OBJECTS) Makefile
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
@@ -244,5 +245,8 @@ run: all
 
 check:
 	cppcheck --quiet --force Core
+
+$(BUILD_DIR)/mavlink_generated/mavlink_packets/mavlink.h: mavlink_packets.xml
+	python External/mavlink/pymavlink/tools/mavgen.py --lang=C --wire-protocol=2.0 --output=$(BUILD_DIR)/mavlink_generated/ ./mavlink_packets.xml
 
 # *** EOF ***

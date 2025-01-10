@@ -34,8 +34,14 @@ Strive to follow the standard set by these examples.
 
 - **arm-none-eabi GNU C/C++ Toolchain** (obtainable through **MSYS2 on Windows** or **Homebrew on Mac**)
 - **probe-rs** for uploading the software to the flight computer
-- Python **pymavlink** package for generating MAVLink (aerial vehicle communication protocol) code from packet definitions (`mavlink_packets.xml`). 
+- **Python 3.12 or later**
 - **cppcheck** for checking code for subtle errors
+
+**Required preliminary actions:**  
+Install dependencies for MAVLink (aerial vehicle communication protocol):
+```
+python -m pip install -r External/mavlink/pymavlink/requirements.txt
+```
 
 ## Compiling and Uploading to Flight Computer
 
