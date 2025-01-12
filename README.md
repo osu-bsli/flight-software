@@ -32,12 +32,24 @@ Strive to follow the standard set by these examples.
 
 ## Required Dependencies
 
-- **arm-none-eabi GNU C/C++ Toolchain** (obtainable through **MSYS2 on Windows** or **Homebrew on Mac**)
-- **probe-rs** for uploading the software to the flight computer
-- **Python 3.12 or later**
+Most of these dependencies are obtainable through **MSYS2 on Windows** or **Homebrew on Mac**.
+
+- **arm-none-eabi GNU C/C++ Toolchain** 
+  - MSYS2 install command: `pacman -S mingw-w64-x86_64-arm-none-eabi-toolchain`
+  - Homebrew install command: `brew install --cask gcc-arm-embedded`
 - **cppcheck** for checking code for subtle errors
+  - MSYS2 install command: `pacman -S mingw-w64-x86_64-cppcheck`
+  - Homebrew install command: `brew install cppcheck`
+- **probe-rs** for uploading the software to the flight computer
+  - MSYS2 install command: `cargo install probe-rs-tools`
+  - Homebrew install command: `brew install probe-rs-tools`
+- **STM32CubeMX** for generating code for the flight software
+  - Get it from the STMicroelectronics website: https://www.st.com/en/development-tools/stm32cubemx.html
+- **Python 3.11 or later**
+  - Get it from https://python.org 
 
 **Required preliminary actions:**  
+Run these inside the flight-software repo directory.  
 Install dependencies for MAVLink (aerial vehicle communication protocol):
 ```
 python -m pip install -r External/mavlink/pymavlink/requirements.txt
