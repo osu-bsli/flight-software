@@ -192,8 +192,10 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
-
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin 
+ifeq (,$(wildcard External/mavlink/pymavlink))
+    $(error External/mavlink/pymavlink is missing. Make sure your git submodules are updated. !)
+endif
 
 #######################################
 # build the application
@@ -239,7 +241,7 @@ clean:
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
 
-.PHONY: run check
+.PHONY: run check flash
 run: all
 	probe-rs run --chip STM32H753IITx ./build/$(TARGET).elf
 
