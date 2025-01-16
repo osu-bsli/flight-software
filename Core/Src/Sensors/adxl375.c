@@ -41,11 +41,14 @@
 #define REGISTER_SHOCK_AXES 0x2Au
 #define REGISTER_ACT_SHOCK_STATUS 0x2Bu
 #define REGISTER_BW_RATE 0x2Cu
+#define REGISTER_BW_RATE_LOW_POWER (1 << 4)
+#define REGISTER_BW_RATE_100HZ 0b1010
 #define REGISTER_POWER_CTL 0x2Du
 #define REGISTER_INT_ENABLE 0x2Eu
 #define REGISTER_INT_MAP 0x2Fu
 #define REGISTER_INT_SOURCE 0x30u
 #define REGISTER_DATA_FORMAT 0x31u
+#define REGISTER_DATA_FORMAT_SELF_TEST (1 << 7)
 #define REGISTER_DATAX0 0x32u
 #define REGISTER_DATAX1 0x33u
 #define REGISTER_DATAY0 0x34u
@@ -54,10 +57,6 @@
 #define REGISTER_DATAZ1 0x37u
 #define REGISTER_FIFO_CTL 0x38u
 #define REGISTER_FIFO_STATUS 0x39u
-
-/* fixed +/- 200g acceleration range (datasheet pg. 10) */
-#define ACC_RANGE_MAX 200.0f
-#define ACC_RANGE_MIN (-200.0f)
 
 /*
  * Private functions.
@@ -149,23 +148,7 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
     return status;
   }
 
-  /* Configure DATA_READY Bit in INT_MAP register (pg. 23) */
-  data = 0b01111111;
-  status = write_registers(device, REGISTER_INT_MAP, &data, sizeof(data));
-  if (status != HAL_OK) {
-    return status;
-  }
-
-  /* Configure DATA_READY Bit in INT_ENABLE register (pg. 23) */
-  // using INT1 pin for interrupts
-  data = 0b10000000; // double check register 0x2E default values
-  status = write_registers(device, REGISTER_INT_ENABLE, &data, sizeof(data));
-  if (status != HAL_OK) {
-    return status;
-  }
-
-  /* Configure LOW_POWER Bit in BW_RATE register (pg. 22) */
-  data = 0b00011010; // disable low power, keep default rate
+  data = REGISTER_BW_RATE_100HZ; // disable low power, 100 Hz
   status = write_registers(device, REGISTER_BW_RATE, &data, sizeof(data));
   if (status != HAL_OK) {
     return status;
@@ -218,12 +201,13 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
   /* convert raw data to actual acceleration data */
   /* ============================================ */
 
-  // TODO (Brian Jia): why is the data wrong? not getting 1G down on Z sitting on the table
-  float scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
+
+  float scale = 0.049; // (pg. 3) 49 mg/LSB
   device->acceleration_x = scale * (float)raw_acceleration_x;
   device->acceleration_y = scale * (float)raw_acceleration_y;
   device->acceleration_z = scale * (float)raw_acceleration_z;
 
+  /* TODO: Is the ADXL375 on the 24-F01-001 FC damaged????? Only getting 0.24g when sitting on table */
   char buf[64];
   SEGGER_RTT_printf(0, "adxl375: process\n");
   sprintf(buf, "%f", device->acceleration_x);
