@@ -3,7 +3,10 @@
 Flight Software for the BSLI IREC (International Rocket Engineering Competition) student researched and developed flight computer.
 The flight computer connects to a radio board for telemetry and has onboard power electronics for ejection charge detonation (parachute deployment). 
 
+# Table of Contents
+
 - [BSLI IREC Avionics Flight Software](#bsli-irec-avionics-flight-software)
+- [Table of Contents](#table-of-contents)
   - [Hardware Specifications](#hardware-specifications)
   - [Code Examples](#code-examples)
   - [Required Dependencies](#required-dependencies)
@@ -34,6 +37,8 @@ Strive to follow the standard set by these examples.
 
 Most of these dependencies are obtainable through **MSYS2 on Windows** or **Homebrew on Mac**.
 
+On Windows, probe-rs is only obtainable through **cargo**, the package manager for **The Rust Programming Language**.
+
 - **arm-none-eabi GNU C/C++ Toolchain** 
   - MSYS2 install command: `pacman -S mingw-w64-x86_64-arm-none-eabi-toolchain`
   - Homebrew install command: `brew install --cask gcc-arm-embedded`
@@ -41,7 +46,7 @@ Most of these dependencies are obtainable through **MSYS2 on Windows** or **Home
   - MSYS2 install command: `pacman -S mingw-w64-x86_64-cppcheck`
   - Homebrew install command: `brew install cppcheck`
 - **probe-rs** for uploading the software to the flight computer
-  - MSYS2 install command: `cargo install probe-rs-tools`
+  - cargo install command: `cargo install probe-rs-tools`
   - Homebrew install command: `brew install probe-rs-tools`
 - **STM32CubeMX** for generating code for the flight software
   - Get it from the STMicroelectronics website: https://www.st.com/en/development-tools/stm32cubemx.html
