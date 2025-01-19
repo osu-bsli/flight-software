@@ -27,6 +27,7 @@
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticTask_t osStaticThreadDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -47,9 +48,18 @@ I2C_HandleTypeDef hi2c1;
 
 SD_HandleTypeDef hsd1;
 
-osThreadId taskMainHandle;
-uint32_t taskMainBuffer[ 128 ];
+/* Definitions for taskMain */
+osThreadId_t taskMainHandle;
+uint32_t taskMainBuffer[ 16384 ];
 osStaticThreadDef_t taskMainControlBlock;
+const osThreadAttr_t taskMain_attributes = {
+  .name = "taskMain",
+  .cb_mem = &taskMainControlBlock,
+  .cb_size = sizeof(taskMainControlBlock),
+  .stack_mem = &taskMainBuffer[0],
+  .stack_size = sizeof(taskMainBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,7 +70,7 @@ static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SDMMC1_SD_Init(void);
 static void MX_I2C1_Init(void);
-void task_main(void const * argument);
+void task_main(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -109,6 +119,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -126,13 +139,16 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of taskMain */
-  osThreadStaticDef(taskMain, task_main, osPriorityNormal, 0, 128, taskMainBuffer, &taskMainControlBlock);
-  taskMainHandle = osThreadCreate(osThread(taskMain), NULL);
+  /* creation of taskMain */
+  taskMainHandle = osThreadNew(task_main, NULL, &taskMain_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
   osKernelStart();
@@ -280,7 +296,7 @@ static void MX_SDMMC1_SD_Init(void)
   hsd1.Instance = SDMMC1;
   hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
   hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-  hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
+  hsd1.Init.BusWide = SDMMC_BUS_WIDE_1B;
   hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd1.Init.ClockDiv = 0;
   /* USER CODE BEGIN SDMMC1_Init 2 */
@@ -348,7 +364,7 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_task_main */
-__weak void task_main(void const * argument)
+__weak void task_main(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */

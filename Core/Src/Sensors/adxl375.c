@@ -202,13 +202,13 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
   /* TODO: Yeah it's a high-G accel it needs careful calibration */
   /* TODO: Calibrate the ADXL375 and add code to write the calibration values to the sensor on startup */
   char buf[64];
-  SEGGER_RTT_printf(0, "adxl375: process\n");
-  sprintf(buf, "%f", device->acceleration_x);
-  SEGGER_RTT_printf(0, "adxl375: accel x: %s\n", buf);
-  sprintf(buf, "%f", device->acceleration_y);
-  SEGGER_RTT_printf(0, "adxl375: accel y: %s\n", buf);
-  sprintf(buf, "%f", device->acceleration_z);
-  SEGGER_RTT_printf(0, "adxl375: accel z: %s\n", buf);
+  // SEGGER_RTT_printf(0, "adxl375: process\n");
+  // sprintf(buf, "%f", device->acceleration_x);
+  // SEGGER_RTT_printf(0, "adxl375: accel x: %s\n", buf);
+  // sprintf(buf, "%f", device->acceleration_y);
+  // SEGGER_RTT_printf(0, "adxl375: accel y: %s\n", buf);
+  // sprintf(buf, "%f", device->acceleration_z);
+  // SEGGER_RTT_printf(0, "adxl375: accel z: %s\n", buf);
 
   return HAL_OK;
 }

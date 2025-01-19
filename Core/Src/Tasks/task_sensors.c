@@ -31,7 +31,7 @@ static void task_sensors(void *argument) {
   fc_adxl375_initialize(&adxl375, &hi2c1);
 
   while (true) {
-    SEGGER_RTT_printf(0, "Sensor time (ms): %d\n", time);
+    // SEGGER_RTT_printf(0, "Sensor time (ms): %d\n", time);
 
     fc_adxl375_process(&adxl375);
 

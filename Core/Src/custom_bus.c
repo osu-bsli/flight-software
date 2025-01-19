@@ -465,6 +465,8 @@ static void I2C3_MspInit(I2C_HandleTypeDef* i2cHandle)
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(I2C3_EV_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C3_ER_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(I2C3_ER_IRQn);
   /* USER CODE BEGIN I2C3_MspInit 1 */
 
   /* USER CODE END I2C3_MspInit 1 */
@@ -488,6 +490,8 @@ static void I2C3_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(I2C3_EV_IRQn);
+
+    HAL_NVIC_DisableIRQ(I2C3_ER_IRQn);
 
   /* USER CODE BEGIN I2C3_MspDeInit 1 */
 

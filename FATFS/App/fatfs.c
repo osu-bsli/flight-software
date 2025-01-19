@@ -34,6 +34,7 @@ void MX_FATFS_Init(void)
 
   /* USER CODE BEGIN Init */
   /* additional user code for init */
+  SEGGER_RTT_printf(0, "SD Card FATFS_LinkDriver Return Value: %d\n", retSD);
   /* USER CODE END Init */
 }
 
