@@ -148,6 +148,12 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
     return status;
   }
 
+  data = 0b00001011;
+  status = write_registers(device, REGISTER_DATA_FORMAT, &data, sizeof(data));
+  if (status != HAL_OK) {
+    return status;
+  }
+
   data = REGISTER_BW_RATE_100HZ; // disable low power, 100 Hz
   status = write_registers(device, REGISTER_BW_RATE, &data, sizeof(data));
   if (status != HAL_OK) {
@@ -159,23 +165,7 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
 
 HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
   HAL_StatusTypeDef status;
-
-  // TODO (Brian Jia): WTF DON'T DO THIS
-  // TODO (Brian Jia): Options are:
-  // TODO (Brian Jia): 1. Just run the sensor at a high update rate and poll it slower than the update rate (preferred)
-  // TODO (Brian Jia): 2. Use a GPIO data ready interrupt. (more complex, probably not worthwhile)
-  /* ========================================= */
-  /* Wait until data is ready to start process */
-  /* ========================================= */
-  int isready = 0;
-  while (!isready) {
-    status = is_data_ready(device, &isready);
-    if (status != HAL_OK) {
-      return HAL_ERROR;
-    }
-    osDelay(10);
-  }
-
+  
   /* ================================ */
   /* read raw acceleration data bytes */
   /* ================================ */
@@ -207,7 +197,10 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
   device->acceleration_y = scale * (float)raw_acceleration_y;
   device->acceleration_z = scale * (float)raw_acceleration_z;
 
-  /* TODO: Is the ADXL375 on the 24-F01-001 FC damaged????? Only getting 0.24g when sitting on table */
+  /* TODO: Is the ADXL375 on the 24-F01-001 FC damaged????? Readings seem VERY off */
+  /* TODO: Maybe I just need to calibrate the accel lmao */
+  /* TODO: Yeah it's a high-G accel it needs careful calibration */
+  /* TODO: Calibrate the ADXL375 and add code to write the calibration values to the sensor on startup */
   char buf[64];
   SEGGER_RTT_printf(0, "adxl375: process\n");
   sprintf(buf, "%f", device->acceleration_x);
