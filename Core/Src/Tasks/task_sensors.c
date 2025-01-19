@@ -6,10 +6,13 @@
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
+#include <ff.h>
+#include <fatfs.h>
+#include <stdio.h>
 
 /*
  * task_sensors.c
- * 
+ *
  * Task that runs periodically to collect sensor data and make it available for
  * other tasks, for example the telemetry task and the airbrake task.
  */
@@ -25,21 +28,105 @@ static struct fc_adxl375 adxl375;
 
 extern I2C_HandleTypeDef hi2c1;
 
-static void task_sensors(void *argument) {
+static void sd_card_failed()
+{
+  HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
+}
+
+static void task_sensors(void *argument)
+{
   UNUSED(argument);
 
+  /* Set up SD card */
+
+  /*
+   * BRIAN JIA'S NOTES FROM DEBUGGING HELL:
+   *
+   * DO NOT PLACE PROGRAM RAM INTO DTCM. THE SDMMC DMA CANNOT READ FROM DTCM AND IT WILL FAIL IN WEIRD WAYS.
+   * f_mount() WILL TIME OUT FOR NO APPARENT REASON IF PROGRAM RAM AND THUS THE SDMMC DMA BUFFER IS IN DTCM.
+   *
+   * THAT TOOK A LITERAL YEAR TO DEBUG. FUCK.
+   */
+
+  if (BSP_SD_IsDetected())
+  {
+    SEGGER_RTT_printf(0, "SD Card is SUCCESSFULLY detected\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "SD Card is NOT detected\n");
+  }
+
+  FRESULT fr_status = f_mount(&SDFatFS, SDPath, 1);
+  if (fr_status == FR_OK)
+  {
+    SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
+    /* Turn on green LED to indicate SD card success */
+    HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
+  }
+
+  /* Find a %d.csv filename that is free to use */
+  char file_name[16];
+  int file_num = 0;
+  do
+  {
+    snprintf(file_name, 16, "%d.csv", file_num);
+    file_num++;
+  } while (f_stat(file_name, NULL) == FR_OK);
+
+  /* Open the csv */
+  FIL log_csv;
+  fr_status = f_open(&log_csv, file_name, FA_CREATE_NEW | FA_WRITE);
+  if (fr_status == FR_OK)
+  {
+    SEGGER_RTT_printf(0, "Opened %s for telemetry logging\n", file_name);
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
+  }
+  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z\n");
+
+  /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
 
-  while (true) {
+  while (true)
+  {
     // SEGGER_RTT_printf(0, "Sensor time (ms): %d\n", time);
 
-    fc_adxl375_process(&adxl375);
+    struct fc_adxl375_data adxl375_data;
+    fc_adxl375_process(&adxl375, &adxl375_data);
+
+    uint32_t time_ms = time;
+    float high_g_accel_x = adxl375_data.acceleration_x;
+    float high_g_accel_y = adxl375_data.acceleration_y;
+    float high_g_accel_z = adxl375_data.acceleration_z;
+    char buf[256];
+    /* Use snprintf because f_printf() does not support floats */
+    snprintf(buf, 256, "%d,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z);
+    uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
+    if (chars_printed < 0) {
+      sd_card_failed();
+    }
+
+    /* flush data to SD card */
+    fr_status = f_sync(&log_csv);
+    if (fr_status != FR_OK) {
+      sd_card_failed();
+    }
 
     vTaskDelayUntil(&time, interval_ms);
+
+    HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
   }
 }
 
-void task_sensors_start(void) {
+void task_sensors_start(void)
+{
   ASSERT(handle == NULL);
 
   handle = xTaskCreateStatic(

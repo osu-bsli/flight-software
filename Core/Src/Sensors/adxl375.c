@@ -2,7 +2,7 @@
  * adxl375.c
  *
  * ADXL375 accelerometer driver.
- * 
+ *
  * @authors
  * - Dawn Goorskey
  * - Hana Winchester
@@ -60,8 +60,8 @@
 
 /*
  * Private functions.
- * 
- * Note how these functions are marked static. 
+ *
+ * Note how these functions are marked static.
  * That means they are inaccessible to other C files. "static" tells the compiler
  * to not export the function as a public symbol.
  *
@@ -70,7 +70,8 @@
  */
 
 static HAL_StatusTypeDef read_registers(struct fc_adxl375 *device, uint8_t reg,
-                                 uint8_t *data, uint8_t length) {
+                                        uint8_t *data, uint8_t length)
+{
   // TODO: Use interrupt mode
   HAL_StatusTypeDef status = HAL_I2C_Mem_Read(
       device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length, 100);
@@ -78,7 +79,8 @@ static HAL_StatusTypeDef read_registers(struct fc_adxl375 *device, uint8_t reg,
 }
 
 static HAL_StatusTypeDef write_registers(struct fc_adxl375 *device, uint8_t reg,
-                                  uint8_t *data, uint8_t length) {
+                                         uint8_t *data, uint8_t length)
+{
   // TODO: Use interrupt mode
   HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
       device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length, 100);
@@ -86,14 +88,16 @@ static HAL_StatusTypeDef write_registers(struct fc_adxl375 *device, uint8_t reg,
 }
 
 static HAL_StatusTypeDef is_data_ready(struct fc_adxl375 *device,
-                                           int *isready) {
+                                       int *isready)
+{
 
   uint8_t interrupt_data;
 
   /* read INT_SOURCE bits (pg. 23) */
   HAL_StatusTypeDef status = read_registers(
       device, REGISTER_INT_SOURCE, &interrupt_data, sizeof(interrupt_data));
-  if (status != HAL_OK) {
+  if (status != HAL_OK)
+  {
     return status;
   }
 
@@ -106,9 +110,12 @@ static HAL_StatusTypeDef is_data_ready(struct fc_adxl375 *device,
   interrupt_data >>= 7;
 
   // if DATA_READY bit is 1, an interrupt triggered indicating data is ready
-  if (interrupt_data == 1) {
+  if (interrupt_data == 1)
+  {
     *isready = 1;
-  } else {
+  }
+  else
+  {
     *isready = 0;
   }
 
@@ -120,23 +127,23 @@ static HAL_StatusTypeDef is_data_ready(struct fc_adxl375 *device,
  */
 
 HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
-                                        I2C_HandleTypeDef *i2c_handle) {
+                                        I2C_HandleTypeDef *i2c_handle)
+{
 
   /* reset struct */
   device->i2c_handle = i2c_handle;
-  device->acceleration_x = 0.0f;
-  device->acceleration_y = 0.0f;
-  device->acceleration_z = 0.0f;
 
   HAL_StatusTypeDef status;
   uint8_t data;
 
   /* Check that device ID is correct */
   status = read_registers(device, REGISTER_DEVID, &data, sizeof(data));
-  if (status != HAL_OK) {
+  if (status != HAL_OK)
+  {
     return status;
   }
-  if (data != DEVICE_ID) {
+  if (data != DEVICE_ID)
+  {
     SEGGER_RTT_printf(0, "adxl375: device ID does not match expected\n");
     return HAL_ERROR;
   }
@@ -144,37 +151,42 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   /* Set measure bit in POWER_CTL register (pg. 22) */
   data = 0b00001000;
   status = write_registers(device, REGISTER_POWER_CTL, &data, sizeof(data));
-  if (status != HAL_OK) {
+  if (status != HAL_OK)
+  {
     return status;
   }
 
   data = 0b00001011;
   status = write_registers(device, REGISTER_DATA_FORMAT, &data, sizeof(data));
-  if (status != HAL_OK) {
+  if (status != HAL_OK)
+  {
     return status;
   }
 
   data = REGISTER_BW_RATE_100HZ; // disable low power, 100 Hz
   status = write_registers(device, REGISTER_BW_RATE, &data, sizeof(data));
-  if (status != HAL_OK) {
+  if (status != HAL_OK)
+  {
     return status;
   }
 
   return HAL_OK;
 }
 
-HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
+HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl375_data *data)
+{
   HAL_StatusTypeDef status;
-  
+
   /* ================================ */
   /* read raw acceleration data bytes */
   /* ================================ */
 
-  uint8_t data[6]; /* DATAX0, X1, Y0, Y1, Z0, and Z1 registers (pg. 24) */
+  uint8_t raw_accel_data[6]; /* DATAX0, X1, Y0, Y1, Z0, and Z1 registers (pg. 24) */
 
   /* start i2c read */
-  status = read_registers(device, REGISTER_DATAX0, data, sizeof(data));
-  if (status != HAL_OK) {
+  status = read_registers(device, REGISTER_DATAX0, raw_accel_data, sizeof(raw_accel_data));
+  if (status != HAL_OK)
+  {
     return HAL_ERROR;
   }
 
@@ -183,19 +195,18 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device) {
   /* ===================================== */
 
   /* Little endian (pg. 24) */
-  int16_t raw_acceleration_x = u8_to_i16(data[0], data[1]);
-  int16_t raw_acceleration_y = u8_to_i16(data[2], data[3]);
-  int16_t raw_acceleration_z = u8_to_i16(data[4], data[5]);
+  int16_t raw_acceleration_x = u8_to_i16(raw_accel_data[0], raw_accel_data[1]);
+  int16_t raw_acceleration_y = u8_to_i16(raw_accel_data[2], raw_accel_data[3]);
+  int16_t raw_acceleration_z = u8_to_i16(raw_accel_data[4], raw_accel_data[5]);
 
   /* ============================================ */
   /* convert raw data to actual acceleration data */
   /* ============================================ */
 
-
   float scale = 0.049; // (pg. 3) 49 mg/LSB
-  device->acceleration_x = scale * (float)raw_acceleration_x;
-  device->acceleration_y = scale * (float)raw_acceleration_y;
-  device->acceleration_z = scale * (float)raw_acceleration_z;
+  data->acceleration_x = scale * (float)raw_acceleration_x;
+  data->acceleration_y = scale * (float)raw_acceleration_y;
+  data->acceleration_z = scale * (float)raw_acceleration_z;
 
   /* TODO: Is the ADXL375 on the 24-F01-001 FC damaged????? Readings seem VERY off */
   /* TODO: Maybe I just need to calibrate the accel lmao */
