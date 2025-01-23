@@ -39,6 +39,8 @@ static void task_sensors(void *argument)
 
   /* Set up SD card */
 
+  // TODO: Maybe try re-opening the SD card if it disconnects mid-flight
+
   /*
    * BRIAN JIA'S NOTES FROM DEBUGGING HELL:
    *

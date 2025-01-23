@@ -12,6 +12,7 @@ The flight computer connects to a radio board for telemetry and has onboard powe
   - [Required Dependencies](#required-dependencies)
   - [Compiling and Uploading to Flight Computer](#compiling-and-uploading-to-flight-computer)
 - [Contact](#contact)
+- [BRIAN JIA'S NOTES FROM DEBUGGING HELL](#brian-jias-notes-from-debugging-hell)
 
 The Flight Software aims to be an educational tool by providing high quality examples of sensor drivers, FreeRTOS task management, and embedded development best practices.
 
@@ -87,3 +88,17 @@ Brian Jia
 Sophomore  
 Electrical & Computer Engineering  
 jia.659@osu.edu   
+
+# BRIAN JIA'S NOTES FROM DEBUGGING HELL
+
+DO NOT PLACE PROGRAM RAM INTO DTCM. THE SDMMC DMA CANNOT READ FROM DTCM AND IT WILL FAIL IN WEIRD WAYS.  
+https://github.com/STMicroelectronics/STM32CubeH7/blob/master/Projects/STM32H743I-EVAL/Examples/SD/SD_ReadWrite_IT/readme.txt
+
+> @Note If the  application is using the DTCM/ITCM memories (@0x20000000/ 0x0000000: not cacheable and only accessible
+      by the Cortex M7 and the  MDMA), no need for cache maintenance when the Cortex M7 and the MDMA access these RAMs.
+      If the application needs to use DMA(or other masters) based access or requires more RAM, then  the user has to:
+              - Use a non TCM SRAM. (example : D1 AXI-SRAM @ 0x24000000)
+              - Add a cache maintenance mechanism to ensure the cache coherence between CPU and other masters(DMAs,DMA2D,LTDC,MDMA).
+              - The addresses and the size of cacheable buffers (shared between CPU and other masters)
+                must be	properly defined to be aligned to L1-CACHE line size (32 bytes). 
+```
