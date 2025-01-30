@@ -17,7 +17,7 @@
  */
 
 /* I2C constants (Pg. 10) */
-#define FC_BM1422_I2C_DEVICE_ID			 (0x0Eu << 1)	// There is a low and high address
+#define DEVICE_ID		  (0x0Eu << 1) // There is a low and high address
 
 // Register constants (pg. 10)
 #define REGISTER_INFO		   0x0D   // LSB
