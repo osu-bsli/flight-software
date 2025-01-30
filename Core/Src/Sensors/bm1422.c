@@ -41,6 +41,32 @@
 #define REGISTER_GAIN_PARA_X	   0x9C   // LSB
 #define REGISTER_GAIN_PARA_Y	   0x9E   // LSB
 
+/*
+ * Private functions.
+ *
+ * Note how these functions are marked static.
+ * That means they are inaccessible to other C files. "static" tells the compiler
+ * to not export the function as a public symbol.
+ *
+ * These functions are not prefixed with fc_adxl375_ because they are private
+ * and it is obvious what they do.
+ */
+
+static HAL_StatusTypeDef read_register(struct fc_bm1422 *device, uint8_t reg, uint8_t *data) {
+	return HAL_I2C_Mem_Read_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, sizeof(data));
+}
+
+static HAL_StatusTypeDef read_registers(struct fc_bm1422 *device, uint8_t reg, uint8_t *data, uint8_t length) {
+	return HAL_I2C_Mem_Read_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, length);
+}
+
+static HAL_StatusTypeDef write_register(struct fc_bm1422 *device, uint8_t reg, uint8_t *data) {
+	return HAL_I2C_Mem_Write_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, sizeof(data));
+}
+
+/*
+ * Public functions.
+ */
 
 int fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeDef *i2c_handle) {
 
@@ -124,16 +150,4 @@ int fc_bm1422_process(struct fc_bm1422 *device) {
 	device->magnetic_strength_z = (float) raw_magnetic_strength_Z;
 
 	return 0;
-}
-
-HAL_StatusTypeDef fc_bm1422_readregister(struct fc_bm1422 *device, uint8_t reg, uint8_t *data) {
-	return HAL_I2C_Mem_Read_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, sizeof(data));
-}
-
-HAL_StatusTypeDef fc_bm1422_readregisters(struct fc_bm1422 *device, uint8_t reg, uint8_t *data, uint8_t length) {
-	return HAL_I2C_Mem_Read_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, length);
-}
-
-HAL_StatusTypeDef fc_bm1422_writeregister(struct fc_bm1422 *device, uint8_t reg, uint8_t *data) {
-	return HAL_I2C_Mem_Write_IT(device->i2c_handle, FC_BM1422_I2C_DEVICE_ID, reg, sizeof(reg), data, sizeof(data));
 }
