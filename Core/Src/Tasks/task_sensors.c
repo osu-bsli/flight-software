@@ -1,6 +1,7 @@
 #include <SEGGER_RTT.h>
 #include "flight_software.h"
 #include "Sensors/adxl375.h"
+#include "Sensors/ms5607.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
@@ -25,8 +26,10 @@ static TickType_t time;
 const static TickType_t interval_ms = 100; // 10 Hz, we want 100 Hz eventually
 
 static struct fc_adxl375 adxl375;
+static struct fc_ms5607 ms5607;
 
 extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c4;
 
 static void sd_card_failed()
 {
@@ -93,8 +96,37 @@ static void task_sensors(void *argument)
   }
   f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z\n");
 
+  /*
+   * TODO: WHAT THE FUCK IS HAPPENING
+   * TODO: I AM TOGGLING THE PINS CONNECTED TO THE I2C BUS MANUALLY AND I AM SEEING NOTHING ON THE OSCOPE WHILE PROBING SDA AND SCL
+   * 
+   */
+
+  while (true) {
+    HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_14); // SCL
+    HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_15); // SDA
+    HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
+    osDelay(10);
+  }
+
+  // uint8_t dataBuffer[10] = {0x03, 0x01};
+  // HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c4, (0x76 << 1), dataBuffer, 2, 100);
+  uint8_t dataBuffer[10] = {0x01};
+  // HAL_StatusTypeDef asdf = HAL_I2C_Mem_Write(&hi2c4, (0x76 << 1), 0x03, I2C_MEMADD_SIZE_8BIT, dataBuffer, 1, HAL_MAX_DELAY);
+  // if (asdf != HAL_OK)
+  // {
+  //   SEGGER_RTT_printf(0, "I2C Error: %d\n", asdf);
+  //   SEGGER_RTT_printf(0, "Code: %d\n", hi2c4.ErrorCode);
+  // }
+
+  while (true)
+  {
+    osDelay(1000);
+  }
+
   /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
+  // fc_ms5607_initialize(&ms5607, &hi2c4);
 
   while (true)
   {
@@ -102,6 +134,9 @@ static void task_sensors(void *argument)
 
     struct fc_adxl375_data adxl375_data;
     fc_adxl375_process(&adxl375, &adxl375_data);
+
+    struct fc_ms5607_data ms5607_data;
+    // fc_ms5607_process(&ms5607, &ms5607_data);
 
     uint32_t time_ms = time;
     float high_g_accel_x = adxl375_data.acceleration_x;
@@ -111,13 +146,15 @@ static void task_sensors(void *argument)
     /* Use snprintf because f_printf() does not support floats */
     snprintf(buf, 256, "%d,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z);
     uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
-    if (chars_printed < 0) {
+    if (chars_printed < 0)
+    {
       sd_card_failed();
     }
 
     /* flush data to SD card */
     fr_status = f_sync(&log_csv);
-    if (fr_status != FR_OK) {
+    if (fr_status != FR_OK)
+    {
       sd_card_failed();
     }
 
