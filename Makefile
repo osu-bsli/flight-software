@@ -88,6 +88,7 @@ Core/Src/Tasks/task_blinky.c \
 Core/Src/Tasks/task_main.c \
 Core/Src/Tasks/task_sensors.c \
 Core/Src/common.c \
+Core/Src/flight_staging.c \
 Core/Src/Sensors/adxl375.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f_i2c.c \

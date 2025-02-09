@@ -3,6 +3,7 @@
 #include "Sensors/adxl375.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
+#include "flight_staging.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
