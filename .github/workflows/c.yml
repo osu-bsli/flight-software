@@ -1,0 +1,33 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: configure
+      run: ./configure
+    - name: arm-none-eabi-gcc GNU Arm Embedded Toolchain
+      # You may pin to the exact commit or the version.
+      # uses: carlosperate/arm-none-eabi-gcc-action@f3be82dce0d93e59bb84bbc1ad67c74068e35507
+      uses: carlosperate/arm-none-eabi-gcc-action@v1.10.0
+      with:
+        # GNU Embedded Toolchain for Arm release name (e.g. "10.3-2021.07").
+        release: latest # optional, default is latest
+        # Name for an environmental variable to be created with the toolchain path.
+        #path-env-var: # optional
+    - name: make
+      run: make
+    - name: make check
+      run: make check
+    #- name: make distcheck
+    #  run: make distcheck
+          
