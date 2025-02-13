@@ -1,18 +1,25 @@
-/*
+/**
  * flight_staging.c
+ * @author Ashton South
  *
- * Functions that track and update the state of the rocket.
+ * Functions that track and update rocket state to deploy the parachute.
  */
 
+
+/* TODO: Update these values */
 #define BUFFER_SIZE 10
 #define FLIGHT_THRESHOLD 3.0
+#define AIRBRAKES_THRESHOLD -1.0
+#define DESCENT_HIGH_THRESHOLD 0.0
+#define GROUND_THRESHOLD 1.0
+#define DESCENT_LOW_ALTITUDE 5000.0
 
 typedef enum {
     GROUND,
     FLIGHT,
-    DESCENT,
     AIRBRAKES,
-    PARACHUTE,
+    DESCENT_HIGH,
+    DESCENT_LOW
 } Flight_State;
 
 typedef struct direction_data {
@@ -30,7 +37,8 @@ static Flight_State FLIGHT_STATE = GROUND;
  * This is called every sensor read, so we have a running average used to determine the
  * state of the rocket.
  */
-void update_flight_state(float low_g_accel_x, float low_g_accel_y, float low_g_accel_z) {
+void update_flight_state(float low_g_accel_x, float low_g_accel_y, float low_g_accel_z, float altitude) {
+    /* TODO: Consider not storing x and y data */
     static direction_data x_data = { {0.0}, 0, 0.0 };
     static direction_data y_data = { {0.0}, 0, 0.0 };
     static direction_data z_data = { {0.0}, 0, 0.0 };
@@ -39,16 +47,22 @@ void update_flight_state(float low_g_accel_x, float low_g_accel_y, float low_g_a
     update_average(&y_data, low_g_accel_y);
     update_average(&z_data, low_g_accel_z);
 
-    /* Update FLIGHT_STATE depending on our averaged data 
-     TODO: Update this with code that performs the appropriate actions for each change in
-     * FLIGHT_STATE
-     TODO: Update this with every flight state we will use
-    */
+    /* Update FLIGHT_STATE depending on our averaged data and previous state. */
     if(z_data.avg > FLIGHT_THRESHOLD && FLIGHT_STATE == GROUND) {
         FLIGHT_STATE = FLIGHT;
-    } else if(z_data.avg < FLIGHT_THRESHOLD && FLIGHT_STATE == FLIGHT) {
-        FLIGHT_STATE = DESCENT;
+    } else if(z_data.avg < AIRBRAKES_THRESHOLD && FLIGHT_STATE == FLIGHT) {
+        FLIGHT_STATE = AIRBRAKES;
+    } else if(z_data.avg > DESCENT_HIGH_THRESHOLD && FLIGHT_STATE == AIRBRAKES) {
+        FLIGHT_STATE = DESCENT_HIGH;
+        /* TODO: Deploy drogue parachute here */
+    } else if(altitude < DESCENT_LOW_ALTITUDE && FLIGHT_STATE == DESCENT_HIGH) {
+        FLIGHT_STATE = DESCENT_LOW;
+        /* TODO: Deploy main parachute here */
+    } else if(z_data.avg < GROUND_THRESHOLD && FLIGHT_STATE == DESCENT_LOW) {
+        FLIGHT_STATE = GROUND;
     }
+
+    /* TODO: Possibly log state? */
 }
 
 static float calculate_average(float *buffer) {
