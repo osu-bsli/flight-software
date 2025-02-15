@@ -16,6 +16,11 @@
 struct fc_ms5607
 {
     I2C_HandleTypeDef *i2c_handle; /* the i2c peripheral */
+    uint8_t state;
+    float last_pressure_mbar;
+    float last_temperature_c;
+    uint32_t conversion_started_ms;
+    uint32_t D1, D2;
 
     // PROM contents
     // C[0] - 16-bit manufacturer reserved
@@ -26,6 +31,7 @@ struct fc_ms5607
     // C[5] - C5: Reference temperature
     // C[6] - C6: Temperature coefficient of the temperature
     uint16_t C[7];
+
 };
 
 struct fc_ms5607_data
