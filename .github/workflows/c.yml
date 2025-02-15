@@ -1,0 +1,36 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    #- name: configure
+    #  run: ./configure
+    - name: Install arm-none-eabi toolchain and cppcheck
+      run: sudo apt install gcc-arm-none-eabi cppcheck
+    - name: Checkout submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Setup Python
+      uses: actions/setup-python@v5.4.0
+      with:
+        python-version: 3.13
+    - name: Setup Mavlink
+      run: python -m pip install -r External/mavlink/pymavlink/requirements.txt
+    - name: make
+      run: make
+    - name: make check
+      run: make check
+    #- name: make distcheck
+    #  run: make distcheck
+          
