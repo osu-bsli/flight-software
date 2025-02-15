@@ -209,7 +209,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 60;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 5;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
@@ -302,7 +302,7 @@ static void MX_I2C4_Init(void)
 
   /* USER CODE END I2C4_Init 1 */
   hi2c4.Instance = I2C4;
-  hi2c4.Init.Timing = 0x307075B1;
+  hi2c4.Init.Timing = 0x10707DBC;
   hi2c4.Init.OwnAddress1 = 0;
   hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -373,8 +373,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();

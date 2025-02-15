@@ -16,20 +16,20 @@ struct fc_bmi323_data {
     /* datasheet pg. 22 */
 
     /* Acceleration - in Gs */
-    float acc_x;
-    float acc_y;
-    float acc_z;
-    bool acc_x_saturated;
-    bool acc_y_saturated;
-    bool acc_z_saturated;
+    float accel_x;
+    float accel_y;
+    float accel_z;
+    bool accel_x_saturated;
+    bool accel_y_saturated;
+    bool accel_z_saturated;
 
     /* Gyroscope - in degrees/second */
-    float gyr_x;
-    float gyr_y;
-    float gyr_z;
-    bool gyr_x_saturated;
-    bool gyr_y_saturated;
-    bool gyr_z_saturated;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
+    bool gyro_x_saturated;
+    bool gyro_y_saturated;
+    bool gyro_z_saturated;
 
     /* Temperature - in Celcius */
     float temp;
