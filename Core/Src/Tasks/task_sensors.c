@@ -1,6 +1,7 @@
 #include <SEGGER_RTT.h>
 #include "flight_software.h"
 #include "Sensors/adxl375.h"
+#include "Sensors/ms5607.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
@@ -25,8 +26,10 @@ static TickType_t time;
 const static TickType_t interval_ms = 100; // 10 Hz, we want 100 Hz eventually
 
 static struct fc_adxl375 adxl375;
+static struct fc_ms5607 ms5607;
 
 extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c4;
 
 static void sd_card_failed()
 {
@@ -78,7 +81,7 @@ static void task_sensors(void *argument)
   {
     snprintf(file_name, 16, "%d.csv", file_num);
     file_num++;
-  } while (f_stat(file_name, NULL) == FR_OK);
+  } while ((fr_status = f_stat(file_name, NULL)) == FR_OK);
 
   /* Open the csv */
   FIL log_csv;
@@ -91,10 +94,11 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
   }
-  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z\n");
+  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
   /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
+  fc_ms5607_initialize(&ms5607, &hi2c4);
 
   while (true)
   {
@@ -103,21 +107,28 @@ static void task_sensors(void *argument)
     struct fc_adxl375_data adxl375_data;
     fc_adxl375_process(&adxl375, &adxl375_data);
 
+    struct fc_ms5607_data ms5607_data;
+    fc_ms5607_process(&ms5607, &ms5607_data);
+
     uint32_t time_ms = time;
     float high_g_accel_x = adxl375_data.acceleration_x;
     float high_g_accel_y = adxl375_data.acceleration_y;
     float high_g_accel_z = adxl375_data.acceleration_z;
+    float pressure_mbar = ms5607_data.pressure_mbar;
+    float temperature_c = ms5607_data.temperature_c;
     char buf[256];
     /* Use snprintf because f_printf() does not support floats */
-    snprintf(buf, 256, "%d,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z);
+    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z, pressure_mbar, temperature_c);
     uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
-    if (chars_printed < 0) {
+    if (chars_printed < 0)
+    {
       sd_card_failed();
     }
 
     /* flush data to SD card */
     fr_status = f_sync(&log_csv);
-    if (fr_status != FR_OK) {
+    if (fr_status != FR_OK)
+    {
       sd_card_failed();
     }
 
