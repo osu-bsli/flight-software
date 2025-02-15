@@ -270,19 +270,19 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
      */
 
     {
-        int16_t gyr_data[4]; // dummy + 3-axis gyro data
+        int16_t gyro_data[4]; // dummy + 3-axis gyro data
 
         // multiplier to convert an int16_t to the sensor range
         // (65535 is the max of an int16_t)
         float scale = (GYR_RANGE_MAX - GYR_RANGE_MIN) / 65535.0f;
 
-        status = read_registers(bmi323, REGISTER_GYR_DATA_X, gyr_data, sizeof(gyr_data));
+        status = read_registers(bmi323, REGISTER_GYR_DATA_X, gyro_data, sizeof(gyro_data));
         if (status != HAL_OK)
             return status;
 
-        data->gyr_x = scale * (float)gyr_data[1];
-        data->gyr_y = scale * (float)gyr_data[2];
-        data->gyr_z = scale * (float)gyr_data[3];
+        data->gyro_x = scale * (float)gyro_data[1];
+        data->gyro_y = scale * (float)gyro_data[2];
+        data->gyro_z = scale * (float)gyro_data[3];
     }
 
     /*
@@ -304,17 +304,17 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
      */
 
     {
-        int16_t acc_data[4]; // dummy + 3-axis acceleration data
+        int16_t accel_data[4]; // dummy + 3-axis acceleration data
 
-        status = read_registers(bmi323, REGISTER_ACC_DATA_X, acc_data, sizeof(acc_data));
+        status = read_registers(bmi323, REGISTER_ACC_DATA_X, accel_data, sizeof(accel_data));
         if (status != HAL_OK)
             return status;
 
         float scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
 
-        data->acc_x = scale * (float)acc_data[1];
-        data->acc_y = scale * (float)acc_data[2];
-        data->acc_z = scale * (float)acc_data[3];
+        data->accel_x = scale * (float)accel_data[1];
+        data->accel_y = scale * (float)accel_data[2];
+        data->accel_z = scale * (float)accel_data[3];
     }
 
     data->kernel_timestamp = osKernelGetTickCount();

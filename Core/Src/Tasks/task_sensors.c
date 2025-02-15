@@ -96,12 +96,11 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
   }
-  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
+  f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
   HAL_StatusTypeDef status;
   /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
-  fc_ms5607_initialize(&ms5607, &hi2c4);
   status = fc_adxl375_initialize(&adxl375, &hi2c1);
   if (status == HAL_OK)
   {
@@ -119,6 +118,15 @@ static void task_sensors(void *argument)
   else
   {
     SEGGER_RTT_printf(0, "bmi323 initialization failed\n");
+  }
+  status = fc_ms5607_initialize(&ms5607, &hi2c4);
+  if (status == HAL_OK)
+  {
+    SEGGER_RTT_printf(0, "ms5607 initialization success\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "ms5607 initialization failed\n");
   }
 
   while (true)
@@ -148,7 +156,19 @@ static void task_sensors(void *argument)
     float temperature_c = ms5607_data.temperature_c;
     char buf[256];
     /* Use snprintf because f_printf() does not support floats */
-    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z, pressure_mbar, temperature_c);
+    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+             time_ms,
+             accel_x,
+             accel_y,
+             accel_z,
+             gyro_x,
+             gyro_y,
+             gyro_z,
+             high_g_accel_x,
+             high_g_accel_y,
+             high_g_accel_z,
+             pressure_mbar,
+             temperature_c);
     uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
     if (chars_printed < 0)
     {
