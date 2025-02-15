@@ -281,8 +281,6 @@ void calculate_pressure_and_temperature_from_data(struct fc_ms5607 *device)
 HAL_StatusTypeDef fc_ms5607_process(struct fc_ms5607 *device, struct fc_ms5607_data *data)
 {
     HAL_StatusTypeDef status;
-    uint8_t command;
-    char buf[64];
 
     /* Yes I know we have an RTOS but I don't wanna make things too complex rn */
     switch (device->state)
