@@ -100,7 +100,6 @@ static void task_sensors(void *argument)
 
   HAL_StatusTypeDef status;
   /* Initialize sensor drivers */
-  fc_adxl375_initialize(&adxl375, &hi2c1);
   status = fc_adxl375_initialize(&adxl375, &hi2c1);
   if (status == HAL_OK)
   {
