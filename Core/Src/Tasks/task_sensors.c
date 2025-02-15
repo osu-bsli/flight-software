@@ -1,6 +1,7 @@
 #include <SEGGER_RTT.h>
 #include "flight_software.h"
 #include "Sensors/adxl375.h"
+#include "Sensors/bmi323.h"
 #include "Sensors/ms5607.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
@@ -26,6 +27,7 @@ static TickType_t time;
 const static TickType_t interval_ms = 100; // 10 Hz, we want 100 Hz eventually
 
 static struct fc_adxl375 adxl375;
+static struct fc_bmi323 bmi323;
 static struct fc_ms5607 ms5607;
 
 extern I2C_HandleTypeDef hi2c1;
@@ -94,11 +96,38 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
   }
-  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
+  f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
+  HAL_StatusTypeDef status;
   /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
-  fc_ms5607_initialize(&ms5607, &hi2c4);
+  status = fc_adxl375_initialize(&adxl375, &hi2c1);
+  if (status == HAL_OK)
+  {
+    SEGGER_RTT_printf(0, "adxl375 initialization success\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "adxl375 initialization failed\n");
+  }
+  status = fc_bmi323_initialize(&bmi323, &hi2c1);
+  if (status == HAL_OK)
+  {
+    SEGGER_RTT_printf(0, "bmi323 initialization success\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "bmi323 initialization failed\n");
+  }
+  status = fc_ms5607_initialize(&ms5607, &hi2c4);
+  if (status == HAL_OK)
+  {
+    SEGGER_RTT_printf(0, "ms5607 initialization success\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "ms5607 initialization failed\n");
+  }
 
   while (true)
   {
@@ -110,7 +139,16 @@ static void task_sensors(void *argument)
     struct fc_ms5607_data ms5607_data;
     fc_ms5607_process(&ms5607, &ms5607_data);
 
+    struct fc_bmi323_data bmi323_data;
+    fc_bmi323_process(&bmi323, &bmi323_data);
+
     uint32_t time_ms = time;
+    float accel_x = bmi323_data.accel_x;
+    float accel_y = bmi323_data.accel_x;
+    float accel_z = bmi323_data.accel_x;
+    float gyro_x = bmi323_data.gyro_x;
+    float gyro_y = bmi323_data.gyro_y;
+    float gyro_z = bmi323_data.gyro_z;
     float high_g_accel_x = adxl375_data.acceleration_x;
     float high_g_accel_y = adxl375_data.acceleration_y;
     float high_g_accel_z = adxl375_data.acceleration_z;
@@ -118,7 +156,19 @@ static void task_sensors(void *argument)
     float temperature_c = ms5607_data.temperature_c;
     char buf[256];
     /* Use snprintf because f_printf() does not support floats */
-    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z, pressure_mbar, temperature_c);
+    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+             time_ms,
+             accel_x,
+             accel_y,
+             accel_z,
+             gyro_x,
+             gyro_y,
+             gyro_z,
+             high_g_accel_x,
+             high_g_accel_y,
+             high_g_accel_z,
+             pressure_mbar,
+             temperature_c);
     uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
     if (chars_printed < 0)
     {
