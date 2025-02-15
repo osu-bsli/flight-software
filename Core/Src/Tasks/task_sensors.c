@@ -81,7 +81,7 @@ static void task_sensors(void *argument)
   {
     snprintf(file_name, 16, "%d.csv", file_num);
     file_num++;
-  } while (f_stat(file_name, NULL) == FR_OK);
+  } while ((fr_status = f_stat(file_name, NULL)) == FR_OK);
 
   /* Open the csv */
   FIL log_csv;
@@ -94,39 +94,11 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
   }
-  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z\n");
-
-  /*
-   * TODO: WHAT THE FUCK IS HAPPENING
-   * TODO: I AM TOGGLING THE PINS CONNECTED TO THE I2C BUS MANUALLY AND I AM SEEING NOTHING ON THE OSCOPE WHILE PROBING SDA AND SCL
-   * 
-   */
-
-  while (true) {
-    HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_14); // SCL
-    HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_15); // SDA
-    HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
-    osDelay(10);
-  }
-
-  // uint8_t dataBuffer[10] = {0x03, 0x01};
-  // HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c4, (0x76 << 1), dataBuffer, 2, 100);
-  uint8_t dataBuffer[10] = {0x01};
-  // HAL_StatusTypeDef asdf = HAL_I2C_Mem_Write(&hi2c4, (0x76 << 1), 0x03, I2C_MEMADD_SIZE_8BIT, dataBuffer, 1, HAL_MAX_DELAY);
-  // if (asdf != HAL_OK)
-  // {
-  //   SEGGER_RTT_printf(0, "I2C Error: %d\n", asdf);
-  //   SEGGER_RTT_printf(0, "Code: %d\n", hi2c4.ErrorCode);
-  // }
-
-  while (true)
-  {
-    osDelay(1000);
-  }
+  f_printf(&log_csv, "time_ms,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
   /* Initialize sensor drivers */
   fc_adxl375_initialize(&adxl375, &hi2c1);
-  // fc_ms5607_initialize(&ms5607, &hi2c4);
+  fc_ms5607_initialize(&ms5607, &hi2c4);
 
   while (true)
   {
@@ -136,15 +108,17 @@ static void task_sensors(void *argument)
     fc_adxl375_process(&adxl375, &adxl375_data);
 
     struct fc_ms5607_data ms5607_data;
-    // fc_ms5607_process(&ms5607, &ms5607_data);
+    fc_ms5607_process(&ms5607, &ms5607_data);
 
     uint32_t time_ms = time;
     float high_g_accel_x = adxl375_data.acceleration_x;
     float high_g_accel_y = adxl375_data.acceleration_y;
     float high_g_accel_z = adxl375_data.acceleration_z;
+    float pressure_mbar = ms5607_data.pressure_mbar;
+    float temperature_c = ms5607_data.temperature_c;
     char buf[256];
     /* Use snprintf because f_printf() does not support floats */
-    snprintf(buf, 256, "%d,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z);
+    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f\n", time_ms, high_g_accel_x, high_g_accel_y, high_g_accel_z, pressure_mbar, temperature_c);
     uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
     if (chars_printed < 0)
     {
