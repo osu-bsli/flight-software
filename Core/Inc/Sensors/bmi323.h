@@ -9,6 +9,8 @@
 
 #include <stdbool.h>
 #include "stm32h7xx_hal.h"
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 /* struct */
 
@@ -40,8 +42,9 @@ struct fc_bmi323_data {
 
 struct fc_bmi323 {
     I2C_HandleTypeDef *hi2c; /* the i2c peripheral */
+    SemaphoreHandle_t *i2c_semaphore;
 };
 
 /* functions */
-HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeDef *hi2c);
+HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeDef *hi2c, SemaphoreHandle_t *i2c_semaphore);
 HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_data *data);
