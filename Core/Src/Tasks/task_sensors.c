@@ -5,7 +5,6 @@
 #include "Sensors/ms5607.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
-#include "flight_staging.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
