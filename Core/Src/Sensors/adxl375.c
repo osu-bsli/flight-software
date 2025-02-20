@@ -73,8 +73,12 @@ static HAL_StatusTypeDef read_registers(struct fc_adxl375 *device, uint8_t reg,
                                         uint8_t *data, uint8_t length)
 {
   // TODO: Use interrupt mode
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(
-      device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length, 100);
+  HAL_StatusTypeDef status = HAL_I2C_Mem_Read_IT(
+      device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length);
+  if (xSemaphoreTake(*device->i2c_semaphore, 100) != pdTRUE) {
+    SEGGER_RTT_printf(0, "adxl375: read_registers timeout\n");
+    return HAL_TIMEOUT;
+  }
   return status;
 }
 
@@ -82,15 +86,18 @@ static HAL_StatusTypeDef write_registers(struct fc_adxl375 *device, uint8_t reg,
                                          uint8_t *data, uint8_t length)
 {
   // TODO: Use interrupt mode
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length, 100);
+  HAL_StatusTypeDef status = HAL_I2C_Mem_Write_IT(
+      device->i2c_handle, I2C_ADDRESS, reg, sizeof(reg), data, length);
+  if (xSemaphoreTake(*device->i2c_semaphore, 100) != pdTRUE) {
+    SEGGER_RTT_printf(0, "adxl375: write_registers timeout\n");
+    return HAL_TIMEOUT;
+  }
   return status;
 }
 
 static HAL_StatusTypeDef is_data_ready(struct fc_adxl375 *device,
                                        int *isready)
 {
-
   uint8_t interrupt_data;
 
   /* read INT_SOURCE bits (pg. 23) */
@@ -127,11 +134,12 @@ static HAL_StatusTypeDef is_data_ready(struct fc_adxl375 *device,
  */
 
 HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
-                                        I2C_HandleTypeDef *i2c_handle)
+                                        I2C_HandleTypeDef *i2c_handle,
+                                        SemaphoreHandle_t *i2c_semaphore)
 {
-
   /* reset struct */
   device->i2c_handle = i2c_handle;
+  device->i2c_semaphore = i2c_semaphore;
 
   HAL_StatusTypeDef status;
   uint8_t data;

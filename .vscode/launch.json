@@ -4,13 +4,14 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "type": "probe-rs-debug",
             "request": "launch",
-            "name": "probe-rs Test",
+            "name": "probe-rs Launch",
             "cwd": "",
             "connectUnderReset": true,
-            "chip": "STM32H753ITx",
+            "chip": "STM32H753IITx",
             "flashingConfig": {
                 "flashingEnabled": true,
                 "haltAfterReset": false

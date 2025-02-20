@@ -5,6 +5,11 @@
         "flight_software.h": "c",
         "stm32h7xx_hal.h": "c",
         "adxl375.h": "c",
-        "fatfs.h": "c"
+        "fatfs.h": "c",
+        "ms5607.h": "c",
+        "bmi323.h": "c"
+    },
+    "search.exclude": {
+        "build/": true
     }
 }
