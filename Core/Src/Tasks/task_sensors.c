@@ -3,6 +3,7 @@
 #include "Sensors/adxl375.h"
 #include "Sensors/bmi323.h"
 #include "Sensors/ms5607.h"
+#include "Sensors/bm1422.h"
 #include "Tasks/tasks.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
@@ -29,6 +30,7 @@ const static TickType_t interval_ms = 100; // 10 Hz, we want 100 Hz eventually
 static struct fc_adxl375 adxl375;
 static struct fc_bmi323 bmi323;
 static struct fc_ms5607 ms5607;
+static struct fc_bm1422 bm1422;
 
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c4;
@@ -105,8 +107,17 @@ static void task_sensors(void *argument)
   }
   f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
-  HAL_StatusTypeDef status;
   /* Initialize sensor drivers */
+  HAL_StatusTypeDef status;
+  status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
+  if (status == HAL_OK)
+  {
+    SEGGER_RTT_printf(0, "bm1422 initialization success\n");
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "bm1422 initialization failed\n");
+  }
   status = fc_adxl375_initialize(&adxl375, &hi2c1, &semaphore_i2c1);
   if (status == HAL_OK)
   {
@@ -147,6 +158,9 @@ static void task_sensors(void *argument)
 
     struct fc_bmi323_data bmi323_data;
     fc_bmi323_process(&bmi323, &bmi323_data);
+
+    struct fc_bm1422_data bm1422_data;
+    fc_bm1422_process(&bm1422, &bm1422_data);
 
     int time_ms = time;
     float accel_x = bmi323_data.accel_x;

@@ -7,7 +7,10 @@
         "adxl375.h": "c",
         "fatfs.h": "c",
         "ms5607.h": "c",
-        "bmi323.h": "c"
+        "bmi323.h": "c",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     },
     "search.exclude": {
         "build/": true
