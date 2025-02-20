@@ -106,7 +106,6 @@ Middlewares/Third_Party/FatFs/src/option/ccsbcs.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
 
-
 # ASM sources
 ASM_SOURCES =  \
 startup_stm32h753xx.s
@@ -189,6 +188,14 @@ C_INCLUDES =  \
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+# thanks chat
+CFLAGS += -Wno-unused-parameter -Wno-unused-variable \
+    -Wno-missing-braces -Wno-sign-compare \
+    -Wno-type-limits -Wno-comment \
+    -Wpointer-arith -Wformat=2 \
+    -Werror=incompatible-pointer-types -Werror=implicit-function-declaration \
+    -Werror=return-type -Werror=implicit-int \
+    -Werror=format
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -269,6 +276,9 @@ run: all
 
 check:
 	cppcheck --quiet --force Core
+
+objdump: all
+	arm-none-eabi-objdump -D ./build/$(TARGET).elf > ./build/$(TARGET).objdump
 
 $(BUILD_DIR)/mavlink_generated/mavlink_packets/mavlink.h: mavlink_packets.xml
 	python External/mavlink/pymavlink/tools/mavgen.py --lang=C --wire-protocol=2.0 --output=$(BUILD_DIR)/mavlink_generated/ ./mavlink_packets.xml

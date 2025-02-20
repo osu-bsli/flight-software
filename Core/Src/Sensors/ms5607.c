@@ -15,6 +15,8 @@
 #include "common.h"
 #include "cmsis_os.h"
 #include "SEGGER_RTT.h"
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 /* i2c constants */
 /* THE COMPLEMENT OF THE CSB PIN IS THE LSB OF THE I2C ADDRESS */
@@ -60,7 +62,12 @@
 static HAL_StatusTypeDef write_registers(struct fc_ms5607 *device, uint8_t *data, uint16_t size)
 {
     // TODO: Use interrupt mode
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(device->i2c_handle, I2C_ADDRESS << 1, data, size, 100);
+    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_IT(device->i2c_handle, I2C_ADDRESS << 1, data, size);
+    if (xSemaphoreTake(*device->i2c_semaphore, 100) != pdTRUE)
+    {
+        SEGGER_RTT_printf(0, "ms5607: write_registers timeout\n");
+        return HAL_TIMEOUT;
+    }
     if (status != HAL_OK)
     {
         SEGGER_RTT_printf(0, "ms5607 write_registers HAL error: %d\n", status);
@@ -72,7 +79,12 @@ static HAL_StatusTypeDef write_registers(struct fc_ms5607 *device, uint8_t *data
 static HAL_StatusTypeDef read_registers(struct fc_ms5607 *device, uint8_t *data, uint16_t size)
 {
     // TODO: Use interrupt mode
-    HAL_StatusTypeDef status = HAL_I2C_Master_Receive(device->i2c_handle, I2C_ADDRESS << 1, data, size, 100);
+    HAL_StatusTypeDef status = HAL_I2C_Master_Receive_IT(device->i2c_handle, I2C_ADDRESS << 1, data, size);
+    if (xSemaphoreTake(*device->i2c_semaphore, 100) != pdTRUE)
+    {
+        SEGGER_RTT_printf(0, "ms5607: read_registers timeout\n");
+        return HAL_TIMEOUT;
+    }
     return status;
 }
 
@@ -87,7 +99,6 @@ HAL_StatusTypeDef start_pressure_conversion(struct fc_ms5607 *device)
     uint8_t command = COMMAND_CONVERTD1_OSR4096; // use highest OSR for now
     return write_registers(device, &command, 1);
 }
-
 
 HAL_StatusTypeDef read_temperature_data(struct fc_ms5607 *device)
 {
@@ -131,12 +142,71 @@ HAL_StatusTypeDef read_pressure_data(struct fc_ms5607 *device)
     return status;
 }
 
+void calculate_pressure_and_temperature_from_data(struct fc_ms5607 *device)
+{
+    /*
+     * TEMPERATURE CALCULATION (p. 8)
+     */
+
+    int32_t dT = device->D2 - ((int32_t)device->C[5] * 256);    // D2 - T_ref
+    int32_t TEMP = 2000 + (((int64_t)dT * device->C[6]) >> 23); // 20.0 C + dT * TEMPSENS (2000+dT*C6/2^23)
+
+    /*
+     * PRESSURE CALCULATION (p. 8)
+     */
+
+    int64_t OFF = (((int64_t)device->C[2]) << 17) + (((int64_t)device->C[4] * (int64_t)dT) >> 6);
+    int64_t SENS = (((int64_t)device->C[1]) << 16) + (((int64_t)device->C[3] * (int64_t)dT) >> 7);
+
+    /*
+     * SECOND ORDER TEMPERATURE COMPENSATION (p. 9)
+     */
+
+    int64_t T2, OFF2, SENS2;
+    // Low Temperature
+    if (TEMP < 2000)
+    {
+        T2 = ((int64_t)dT * (int64_t)dT) >> 31;
+        OFF2 = 61 * ((int64_t)(TEMP - 2000) * (int64_t)(TEMP - 2000)) >> 4;
+        SENS2 = 2 * ((int64_t)(TEMP - 2000) * (int64_t)(TEMP - 2000));
+
+        // Very low temperature
+        if (TEMP < -1500)
+        {
+            OFF2 += 15 * ((int64_t)(TEMP + 1500)) * ((int64_t)(TEMP + 1500));
+            SENS2 += 8 * ((int64_t)(TEMP + 1500)) * ((int64_t)(TEMP + 1500));
+        }
+
+        TEMP -= T2;
+        OFF -= OFF2;
+        SENS -= SENS2;
+    }
+
+    int64_t P = ((((int64_t)device->D1 * SENS) >> 21) - OFF) >> 15;
+    device->last_pressure_mbar = (float)P / 100.0f;
+    device->last_temperature_c = TEMP / 100.0f; // Convert from centiCelcius to Celsius
+
+    char buf[64];
+    // Check validity of conversions - values must be between min and max values on data sheet
+    if (device->last_pressure_mbar < 10.0f || device->last_pressure_mbar > 1200.0f)
+    {
+        sprintf(buf, "%f", device->last_pressure_mbar);
+        SEGGER_RTT_printf(0, "ms5607: pressure_mbar out of range: %s\n", buf);
+    }
+
+    if (device->last_temperature_c < -40.0f || device->last_temperature_c > 85.0f)
+    {
+        sprintf(buf, "%f", device->last_temperature_c);
+        SEGGER_RTT_printf(0, "ms5607: temperature_c out of range: %s\n", buf);
+    }
+}
 
 /* Initialize MS5607 barometer I2C device */
-HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeDef *i2c_handle)
+HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeDef *i2c_handle, SemaphoreHandle_t *i2c_semaphore)
 {
     /* reset struct */
     device->i2c_handle = i2c_handle;
+    device->i2c_semaphore = i2c_semaphore;
 
     HAL_StatusTypeDef status;
 
@@ -216,65 +286,6 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
 error:
     SEGGER_RTT_printf(0, "ms5607: init failure\n");
     return status;
-}
-
-void calculate_pressure_and_temperature_from_data(struct fc_ms5607 *device)
-{
-    /*
-     * TEMPERATURE CALCULATION (p. 8)
-     */
-
-    int32_t dT = device->D2 - ((int32_t)device->C[5] * 256);    // D2 - T_ref
-    int32_t TEMP = 2000 + (((int64_t)dT * device->C[6]) >> 23); // 20.0 C + dT * TEMPSENS (2000+dT*C6/2^23)
-
-    /*
-     * PRESSURE CALCULATION (p. 8)
-     */
-
-    int64_t OFF = (((int64_t)device->C[2]) << 17) + (((int64_t)device->C[4] * (int64_t)dT) >> 6);
-    int64_t SENS = (((int64_t)device->C[1]) << 16) + (((int64_t)device->C[3] * (int64_t)dT) >> 7);
-
-    /*
-     * SECOND ORDER TEMPERATURE COMPENSATION (p. 9)
-     */
-
-    int64_t T2, OFF2, SENS2;
-    // Low Temperature
-    if (TEMP < 2000)
-    {
-        T2 = ((int64_t)dT * (int64_t)dT) >> 31;
-        OFF2 = 61 * ((int64_t)(TEMP - 2000) * (int64_t)(TEMP - 2000)) >> 4;
-        SENS2 = 2 * ((int64_t)(TEMP - 2000) * (int64_t)(TEMP - 2000));
-
-        // Very low temperature
-        if (TEMP < -1500)
-        {
-            OFF2 += 15 * ((int64_t)(TEMP + 1500)) * ((int64_t)(TEMP + 1500));
-            SENS2 += 8 * ((int64_t)(TEMP + 1500)) * ((int64_t)(TEMP + 1500));
-        }
-
-        TEMP -= T2;
-        OFF -= OFF2;
-        SENS -= SENS2;
-    }
-
-    int64_t P = ((((int64_t)device->D1 * SENS) >> 21) - OFF) >> 15;
-    device->last_pressure_mbar = (float)P / 100.0f;
-    device->last_temperature_c = TEMP / 100.0f; // Convert from centiCelcius to Celsius
-
-    char buf[64];
-    // Check validity of conversions - values must be between min and max values on data sheet
-    if (device->last_pressure_mbar < 10.0f || device->last_pressure_mbar > 1200.0f)
-    {
-        sprintf(buf, "%f", device->last_pressure_mbar);
-        SEGGER_RTT_printf(0, "ms5607: pressure_mbar out of range: %s\n", buf);
-    }
-
-    if (device->last_temperature_c < -40.0f || device->last_temperature_c > 85.0f)
-    {
-        sprintf(buf, "%f", device->last_temperature_c);
-        SEGGER_RTT_printf(0, "ms5607: temperature_c out of range: %s\n", buf);
-    }
 }
 
 /* Process to read and convert pressure and temperature */

@@ -33,6 +33,9 @@ static struct fc_ms5607 ms5607;
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c4;
 
+static SemaphoreHandle_t semaphore_i2c1;
+static SemaphoreHandle_t semaphore_i2c4;
+
 static void sd_card_failed()
 {
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
@@ -41,6 +44,10 @@ static void sd_card_failed()
 static void task_sensors(void *argument)
 {
   UNUSED(argument);
+
+  /* Create I2C semaphores */
+  semaphore_i2c1 = xSemaphoreCreateBinary();
+  semaphore_i2c4 = xSemaphoreCreateBinary();
 
   /* Set up SD card */
 
@@ -100,7 +107,7 @@ static void task_sensors(void *argument)
 
   HAL_StatusTypeDef status;
   /* Initialize sensor drivers */
-  status = fc_adxl375_initialize(&adxl375, &hi2c1);
+  status = fc_adxl375_initialize(&adxl375, &hi2c1, &semaphore_i2c1);
   if (status == HAL_OK)
   {
     SEGGER_RTT_printf(0, "adxl375 initialization success\n");
@@ -109,7 +116,7 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "adxl375 initialization failed\n");
   }
-  status = fc_bmi323_initialize(&bmi323, &hi2c1);
+  status = fc_bmi323_initialize(&bmi323, &hi2c1, &semaphore_i2c1);
   if (status == HAL_OK)
   {
     SEGGER_RTT_printf(0, "bmi323 initialization success\n");
@@ -118,7 +125,7 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "bmi323 initialization failed\n");
   }
-  status = fc_ms5607_initialize(&ms5607, &hi2c4);
+  status = fc_ms5607_initialize(&ms5607, &hi2c4, &semaphore_i2c4);
   if (status == HAL_OK)
   {
     SEGGER_RTT_printf(0, "ms5607 initialization success\n");
@@ -141,7 +148,7 @@ static void task_sensors(void *argument)
     struct fc_bmi323_data bmi323_data;
     fc_bmi323_process(&bmi323, &bmi323_data);
 
-    uint32_t time_ms = time;
+    int time_ms = time;
     float accel_x = bmi323_data.accel_x;
     float accel_y = bmi323_data.accel_x;
     float accel_z = bmi323_data.accel_x;
@@ -199,4 +206,40 @@ void task_sensors_start(void)
       tskIDLE_PRIORITY, /* Priority at which the task is created. */
       stack,            /* Array to use as the task's stack. */
       &tcb);            /* Variable to hold the task's data structure. */
+}
+
+static void i2c_transfer_complete(I2C_HandleTypeDef *hi2c)
+{
+  if (hi2c == &hi2c1)
+  {
+    xSemaphoreGiveFromISR(semaphore_i2c1, NULL);
+  }
+  else if (hi2c == &hi2c4)
+  {
+    xSemaphoreGiveFromISR(semaphore_i2c4, NULL);
+  }
+}
+
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  i2c_transfer_complete(hi2c);
+}
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  i2c_transfer_complete(hi2c);
+}
+
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  i2c_transfer_complete(hi2c);
+}
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  i2c_transfer_complete(hi2c);
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+  SEGGER_RTT_printf(0, "I2C non-blocking error\n");
 }

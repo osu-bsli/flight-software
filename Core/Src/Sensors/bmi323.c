@@ -10,6 +10,7 @@
  */
 #include "Sensors/bmi323.h"
 #include <assert.h>
+#include "SEGGER_RTT.h"
 
 /* sensor configuration
  * - Accelerometer range: +/- 4 g       (max).
@@ -122,13 +123,25 @@ HAL_StatusTypeDef read_registers(struct fc_bmi323 *device, uint8_t reg, void *da
     HAL_StatusTypeDef status;
 
     /* first, send the register (datasheet pg. 223) */
-    status = HAL_I2C_Master_Transmit(device->hi2c, I2C_ADDRESS, &reg, sizeof(reg), 10);
+    status = HAL_I2C_Master_Transmit_IT(device->hi2c, I2C_ADDRESS, &reg, sizeof(reg));
     if (status != HAL_OK)
         return status;
 
-    status = HAL_I2C_Master_Receive(device->hi2c, I2C_ADDRESS, (uint8_t *)data, length, 10);
+    if (xSemaphoreTake(*device->i2c_semaphore, 1000) != pdTRUE)
+    {
+        SEGGER_RTT_printf(0, "bmi323: read_registers timeout\n");
+        return HAL_TIMEOUT;
+    }
+
+    status = HAL_I2C_Master_Receive_IT(device->hi2c, I2C_ADDRESS, (uint8_t *)data, length);
     if (status != HAL_OK)
         return status;
+
+    if (xSemaphoreTake(*device->i2c_semaphore, 1000) != pdTRUE)
+    {
+        SEGGER_RTT_printf(0, "bmi323: read_registers timeout\n");
+        return HAL_TIMEOUT;
+    }
 
     return HAL_OK;
 }
@@ -138,17 +151,24 @@ HAL_StatusTypeDef read_registers(struct fc_bmi323 *device, uint8_t reg, void *da
  * This function will block the current FreeRTOS task until the write finishes. */
 HAL_StatusTypeDef write_registers(struct fc_bmi323 *device, uint8_t reg, void *data, uint8_t length)
 {
-    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(device->hi2c, I2C_ADDRESS, reg, sizeof(reg),
-                                                    (uint8_t *)data, length, 10);
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Write_IT(device->hi2c, I2C_ADDRESS, reg, sizeof(reg),
+                                                    (uint8_t *)data, length);
     if (status != HAL_OK)
         return status;
+
+    if (xSemaphoreTake(*device->i2c_semaphore, 100) != pdTRUE)
+    {
+        SEGGER_RTT_printf(0, "bmi323: write_registers timeout\n");
+        return HAL_TIMEOUT;
+    }
 
     return HAL_OK;
 }
 
-HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeDef *hi2c)
+HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeDef *hi2c, SemaphoreHandle_t *i2c_semaphore)
 {
     bmi323->hi2c = hi2c;
+    bmi323->i2c_semaphore = i2c_semaphore;
 
     /* when writing to registers with reserved bits, must read, update, then write (datasheet pg. 62) */
     /* write calibration values to registers (datasheet pg. 55) */
@@ -165,7 +185,10 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     if (status != HAL_OK)
         return status;
     if ((chip_id_value[1] & 0xFF) != 0x43u)
+    {
+        SEGGER_RTT_printf(0, "bmi323: device ID does not match expected\n");
         return HAL_ERROR;
+    }
 
     /* check ERR_REG before enabling sensors (datasheet pg. 67) */
     uint16_t err_value[2] = {0x1234, 0x5678};
@@ -317,7 +340,7 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
         data->accel_z = scale * (float)accel_data[3];
     }
 
-    data->kernel_timestamp = osKernelGetTickCount();
+    data->kernel_timestamp = xTaskGetTickCount();
 
     return HAL_OK;
 }
