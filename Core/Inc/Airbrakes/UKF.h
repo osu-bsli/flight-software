@@ -11,7 +11,7 @@
 /* ==================== Constants ==================== */
 
 #define SIZE 18
-#define MASS 20
+#define ROCKET_MASS 20
 #define grav 9.80665
 #define AccC 0.01
 #define GyroC 0.001

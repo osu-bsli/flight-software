@@ -11,6 +11,9 @@
 #include <ff.h>
 #include <fatfs.h>
 #include <stdio.h>
+#include "Airbrakes/airbrakes.h"
+
+#define STACK_SIZE 65536
 
 /*
  * task_sensors.c
@@ -44,6 +47,18 @@ static void sd_card_failed()
 static void task_sensors(void *argument)
 {
   UNUSED(argument);
+
+  // airbrakes_init();
+  // /* Benchmark the airbrakes algorithm */
+  // // get starting ms
+  // uint32_t start_ms = xTaskGetTickCount();
+  // for (int i = 0; i < 1000; i++) {
+  //   airbrakes_run();
+  // }
+  // uint32_t end_ms = xTaskGetTickCount();
+  // SEGGER_RTT_printf(0, "Airbrakes algorithm benchmark: %d ms\n", end_ms - start_ms);
+
+  // while (true) {}
 
   /* Create I2C semaphores */
   semaphore_i2c1 = xSemaphoreCreateBinary();

@@ -15,31 +15,31 @@
 //--------------------------------------------------//
 // Process Model
 //--------------------------------------------------//
-void processModel(double *sigma, double t, double *DeployAngle, double *sensorVector)
+void process_model(double *sigma, double t, double *deploy_angle, double *sensor_vector)
 {
     // dragZ(0), velocityZ(1), positionZ(2), thetaX(3), thetaY(4), thetaZ(5),
-    // accelBias(6), gyroBias(7), gpsBias(8), sensor placeholders(9..17)
+    // accel_bias(6), gyro_bias(7), gps_bias(8), sensor placeholders(9..17)
     for (int i = 0; i < (2 * SIZE + 1); i++)
     {
         // Example: compute magnitude of accel from sensor vector
-        double magA = sqrt(
-            pow(sensorVector[1], 2) +
-            pow(sensorVector[2], 2) +
-            pow(sensorVector[3], 2));
+        double mag_a = sqrt(
+            pow(sensor_vector[1], 2) +
+            pow(sensor_vector[2], 2) +
+            pow(sensor_vector[3], 2));
 
         // Prediction for dragZ
-        sigma[i * SIZE + 0] += drag(*DeployAngle, sigma[i * SIZE + 1]);
+        sigma[i * SIZE + 0] += drag(*deploy_angle, sigma[i * SIZE + 1]);
 
         // velocityZ
-        sigma[i * SIZE + 1] += sin(magA - sigma[i * SIZE + 0]) * t;
+        sigma[i * SIZE + 1] += sin(mag_a - sigma[i * SIZE + 0]) * t;
 
         // positionZ
         sigma[i * SIZE + 2] += sigma[i * SIZE + 1] * t;
 
         // thetaX, thetaY, thetaZ (using sensorVector as raw rates?)
-        sigma[i * SIZE + 3] += sensorVector[3] * t;
-        sigma[i * SIZE + 4] += sensorVector[4] * t;
-        sigma[i * SIZE + 5] += sensorVector[5] * t;
+        sigma[i * SIZE + 3] += sensor_vector[3] * t;
+        sigma[i * SIZE + 4] += sensor_vector[4] * t;
+        sigma[i * SIZE + 5] += sensor_vector[5] * t;
 
         // accelerate / gyro / GPS bias random walk
         sigma[i * SIZE + 6] += AccC * randn();
@@ -49,7 +49,7 @@ void processModel(double *sigma, double t, double *DeployAngle, double *sensorVe
         // store sensor readings in last 9 slots
         for (int s = 0; s < 9; s++)
         {
-            sigma[i * SIZE + (9 + s)] = sensorVector[s];
+            sigma[i * SIZE + (9 + s)] = sensor_vector[s];
         }
     }
 }
@@ -329,10 +329,12 @@ void multiplyTranspose(double *L_inv, double *A_inv, int n)
     }
 }
 
+
+
 void invertMatrixCholesky(double *A, double *A_inv, int n)
 {
-    double *L = (double *)malloc(n * n * sizeof(double));
-    double *L_inv = (double *)malloc(n * n * sizeof(double));
+    double L[n * n * sizeof(double)];
+    double L_inv[n * n * sizeof(double)];
 
     // copy A -> L
     for (int i = 0; i < n * n; i++)
@@ -348,9 +350,6 @@ void invertMatrixCholesky(double *A, double *A_inv, int n)
 
     // A_inv = L_inv^T * L_inv
     multiplyTranspose(L_inv, A_inv, n);
-
-    free(L);
-    free(L_inv);
 }
 
 //--------------------------------------------------//
@@ -520,7 +519,7 @@ double PredictApogee(double *stateVector, double deploymentAngle)
         // k1
         double k1_rho = rho(positionZ);
         double k1_x = velocityZ;
-        double k1_v = -grav - (0.5 / MASS) * k1_rho * drag(deploymentAngle, velocityZ) * surfaceA(deploymentAngle) * pow(velocityZ, 2) * (1.0 / sin(thetaZ));
+        double k1_v = -grav - (0.5 / ROCKET_MASS) * k1_rho * drag(deploymentAngle, velocityZ) * surfaceA(deploymentAngle) * pow(velocityZ, 2) * (1.0 / sin(thetaZ));
         double k1_theta = grav * sin(thetaZ) * cos(thetaZ) / velocityZ;
 
         // k2
@@ -530,7 +529,7 @@ double PredictApogee(double *stateVector, double deploymentAngle)
 
         double k2_rho = rho(posk1);
         double k2_x = vk1;
-        double k2_v = -grav - (0.5 / MASS) * k2_rho * drag(deploymentAngle, vk1) * surfaceA(deploymentAngle) * pow(vk1, 2) * (1.0 / sin(thetaK1));
+        double k2_v = -grav - (0.5 / ROCKET_MASS) * k2_rho * drag(deploymentAngle, vk1) * surfaceA(deploymentAngle) * pow(vk1, 2) * (1.0 / sin(thetaK1));
         double k2_theta = grav * sin(thetaK1) * cos(thetaK1) / vk1;
 
         // k3
@@ -540,7 +539,7 @@ double PredictApogee(double *stateVector, double deploymentAngle)
 
         double k3_rho = rho(posk2);
         double k3_x = vk2;
-        double k3_v = -grav - (0.5 / MASS) * k3_rho * drag(deploymentAngle, vk2) * surfaceA(deploymentAngle) * pow(vk2, 2) * (1.0 / sin(thetaK2));
+        double k3_v = -grav - (0.5 / ROCKET_MASS) * k3_rho * drag(deploymentAngle, vk2) * surfaceA(deploymentAngle) * pow(vk2, 2) * (1.0 / sin(thetaK2));
         double k3_theta = grav * sin(thetaK2) * cos(thetaK2) / vk2;
 
         // k4
@@ -550,7 +549,7 @@ double PredictApogee(double *stateVector, double deploymentAngle)
 
         double k4_rho = rho(posk3);
         double k4_x = vk3;
-        double k4_v = -grav - (0.5 / MASS) * k4_rho * drag(deploymentAngle, vk3) * surfaceA(deploymentAngle) * pow(vk3, 2) * (1.0 / sin(thetaK3));
+        double k4_v = -grav - (0.5 / ROCKET_MASS) * k4_rho * drag(deploymentAngle, vk3) * surfaceA(deploymentAngle) * pow(vk3, 2) * (1.0 / sin(thetaK3));
         double k4_theta = grav * sin(thetaK3) * cos(thetaK3) / vk3;
 
         // Update
