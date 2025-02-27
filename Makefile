@@ -104,7 +104,9 @@ Middlewares/ST/lib_gnss/LibGNSS/Src/gnss_data.c \
 Middlewares/ST/lib_gnss/LibNMEA/Src/NMEA_parser.c \
 Middlewares/Third_Party/FatFs/src/option/ccsbcs.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
+Src/Airbrakes/airbrakes.c \
+Src/Airbrakes/UKF.c
 
 # ASM sources
 ASM_SOURCES =  \
