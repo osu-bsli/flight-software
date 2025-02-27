@@ -1,8 +1,9 @@
-/* ukf.c
+/**
+ * UKF.c
  * Implementation of Unscented Kalman Filter helper functions.
  */
 
-#include "ukf.h"
+#include "Airbrakes/UKF.h"
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

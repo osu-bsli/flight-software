@@ -1,4 +1,5 @@
-/* UKF.h
+/**
+ * UKF.h
  * Unscented Kalman Filter declarations and constants
  */
 
