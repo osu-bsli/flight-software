@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-
+    name: C CI
     runs-on: ubuntu-latest
 
     steps:
