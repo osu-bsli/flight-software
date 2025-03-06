@@ -61,7 +61,7 @@ static void task_sensors(void *argument)
    *
    * THAT TOOK A LITERAL YEAR TO DEBUG. FUCK.
    */
-
+hasjhzdhhfhl|hhdhhlakzdhzdfhdsfhdsfjadsfhgjkdshljk
   if (BSP_SD_IsDetected())
   {
     SEGGER_RTT_printf(0, "SD Card is SUCCESSFULLY detected\n");
