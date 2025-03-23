@@ -212,9 +212,9 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl37
   /* ============================================ */
 
   float scale = 0.049; // (pg. 3) 49 mg/LSB
-  data->acceleration_x = scale * (float)raw_acceleration_x;
-  data->acceleration_y = scale * (float)raw_acceleration_y;
-  data->acceleration_z = scale * (float)raw_acceleration_z;
+  data->accel_x = scale * (float)raw_acceleration_x;
+  data->accel_y = scale * (float)raw_acceleration_y;
+  data->accel_z = scale * (float)raw_acceleration_z;
 
   /* TODO: Is the ADXL375 on the 24-F01-001 FC damaged????? Readings seem VERY off */
   /* TODO: Maybe I just need to calibrate the accel lmao */

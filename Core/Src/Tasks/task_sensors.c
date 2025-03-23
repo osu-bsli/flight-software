@@ -1,5 +1,7 @@
 #include <SEGGER_RTT.h>
 #include "flight_software.h"
+#include "Tasks/task_sensors.h"
+#include "checksum.h"
 #include "Sensors/adxl375.h"
 #include "Sensors/bmi323.h"
 #include "Sensors/ms5607.h"
@@ -10,6 +12,7 @@
 #include <task.h>
 #include <ff.h>
 #include <fatfs.h>
+#include <string.h>
 #include <stdio.h>
 #include "Airbrakes/airbrakes.h"
 
@@ -27,7 +30,7 @@ static StaticTask_t tcb;
 static StackType_t stack[STACK_SIZE];
 
 static TickType_t time;
-const static TickType_t interval_ms = 100; // 10 Hz, we want 100 Hz eventually
+const static TickType_t interval_ms = 55; // ~18 Hz, we want 100 Hz eventually
 
 static struct fc_adxl375 adxl375;
 static struct fc_bmi323 bmi323;
@@ -35,34 +38,48 @@ static struct fc_ms5607 ms5607;
 
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c4;
+extern UART_HandleTypeDef huart6;
 
 static SemaphoreHandle_t semaphore_i2c1;
 static SemaphoreHandle_t semaphore_i2c4;
+static SemaphoreHandle_t semaphore_uart6;
 
-static void sd_card_failed()
+static bool sd_card_working;
+
+static void sd_card_set_working()
 {
+  /* Turn on green LED to indicate SD card success */
+  sd_card_working = true;
+  HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
+}
+
+static void sd_card_set_failed()
+{
+  sd_card_working = false;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
+}
+
+static void telemetry_packet_make_header(struct telemetry_packet *p)
+{
+  // Copy in "FUCKPETER" magic
+  memcpy(p->magic, TELEMETRY_PACKET_MAGIC, sizeof(p->magic));
+  p->size = sizeof(struct telemetry_packet);
+
+  // Zero out the CRC16 field
+  p->crc16 = 0;
+
+  // Write CRC
+  p->crc16 = crc_modbus((const unsigned char*)p, sizeof(struct telemetry_packet));
 }
 
 static void task_sensors(void *argument)
 {
   UNUSED(argument);
 
-  // airbrakes_init();
-  // /* Benchmark the airbrakes algorithm */
-  // // get starting ms
-  // uint32_t start_ms = xTaskGetTickCount();
-  // for (int i = 0; i < 1000; i++) {
-  //   airbrakes_run();
-  // }
-  // uint32_t end_ms = xTaskGetTickCount();
-  // SEGGER_RTT_printf(0, "Airbrakes algorithm benchmark: %d ms\n", end_ms - start_ms);
-
-  // while (true) {}
-
-  /* Create I2C semaphores */
+  /* Create peripheral semaphores */
   semaphore_i2c1 = xSemaphoreCreateBinary();
   semaphore_i2c4 = xSemaphoreCreateBinary();
+  semaphore_uart6 = xSemaphoreCreateBinary();
 
   /* Set up SD card */
 
@@ -90,8 +107,7 @@ static void task_sensors(void *argument)
   if (fr_status == FR_OK)
   {
     SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
-    /* Turn on green LED to indicate SD card success */
-    HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
+    sd_card_set_working();
   }
   else
   {
@@ -163,49 +179,76 @@ static void task_sensors(void *argument)
     struct fc_bmi323_data bmi323_data;
     fc_bmi323_process(&bmi323, &bmi323_data);
 
-    int time_ms = time;
+    int time_boot_ms = time;
     float accel_x = bmi323_data.accel_x;
-    float accel_y = bmi323_data.accel_x;
-    float accel_z = bmi323_data.accel_x;
+    float accel_y = bmi323_data.accel_y;
+    float accel_z = bmi323_data.accel_z;
     float gyro_x = bmi323_data.gyro_x;
     float gyro_y = bmi323_data.gyro_y;
     float gyro_z = bmi323_data.gyro_z;
-    float high_g_accel_x = adxl375_data.acceleration_x;
-    float high_g_accel_y = adxl375_data.acceleration_y;
-    float high_g_accel_z = adxl375_data.acceleration_z;
+    float high_g_accel_x = adxl375_data.accel_x;
+    float high_g_accel_y = adxl375_data.accel_y;
+    float high_g_accel_z = adxl375_data.accel_z;
     float pressure_mbar = ms5607_data.pressure_mbar;
     float temperature_c = ms5607_data.temperature_c;
     char buf[256];
     /* Use snprintf because f_printf() does not support floats */
-    snprintf(buf, 256, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-             time_ms,
-             accel_x,
-             accel_y,
-             accel_z,
-             gyro_x,
-             gyro_y,
-             gyro_z,
-             high_g_accel_x,
-             high_g_accel_y,
-             high_g_accel_z,
-             pressure_mbar,
-             temperature_c);
-    uint32_t chars_printed = f_printf(&log_csv, "%s", buf);
-    if (chars_printed < 0)
+    uint32_t chars_printed = snprintf(buf, 256, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+                                      time_boot_ms,
+                                      accel_x,
+                                      accel_y,
+                                      accel_z,
+                                      gyro_x,
+                                      gyro_y,
+                                      gyro_z,
+                                      high_g_accel_x,
+                                      high_g_accel_y,
+                                      high_g_accel_z,
+                                      pressure_mbar,
+                                      temperature_c);
+
+    struct telemetry_packet packet = {
+      .status_flags = 0,
+      .time_boot_ms = time_boot_ms,
+      .ms5607_pressure_mbar = pressure_mbar,
+      .ms5607_temperature_c = temperature_c,
+      .bmi323_accel_x = accel_x,
+      .bmi323_accel_y = accel_y,
+      .bmi323_accel_z = accel_z,
+      .bmi323_gyro_x = gyro_x,
+      .bmi323_gyro_y = gyro_y,
+      .bmi323_gyro_z = gyro_z,
+      .adxl375_accel_x = accel_x,
+      .adxl375_accel_y = accel_y,
+      .adxl375_accel_z = accel_z,
+    };
+
+    if (sd_card_working) packet.status_flags |= STATUS_FLAGS_SD_CARD_WORKING;
+
+    telemetry_packet_make_header(&packet);
+
+    HAL_UART_Transmit_IT(&huart6, (uint8_t*)&packet, sizeof(packet));
+    SEGGER_RTT_printf(0, "Telemetry packet sent: %d bytes\n", sizeof(packet));
+
+    uint32_t chars_written_to_sd = f_printf(&log_csv, "%s", buf);
+    if (chars_written_to_sd < 0)
     {
-      sd_card_failed();
+      sd_card_set_failed();
     }
 
     /* flush data to SD card */
     fr_status = f_sync(&log_csv);
     if (fr_status != FR_OK)
     {
-      sd_card_failed();
+      sd_card_set_failed();
     }
 
-    vTaskDelayUntil(&time, interval_ms);
-
     HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
+
+    // Wait for UART to be done (FreeRTOS)
+    xSemaphoreTake(semaphore_uart6, portMAX_DELAY);
+
+    vTaskDelayUntil(&time, interval_ms);
   }
 }
 
@@ -252,6 +295,14 @@ void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
   i2c_transfer_complete(hi2c);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart == &huart6)
+  {
+    xSemaphoreGiveFromISR(semaphore_uart6, NULL);
+  }
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)

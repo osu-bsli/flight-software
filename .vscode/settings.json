@@ -7,9 +7,14 @@
         "adxl375.h": "c",
         "fatfs.h": "c",
         "ms5607.h": "c",
-        "bmi323.h": "c"
+        "bmi323.h": "c",
+        "cmath": "c",
+        "compare": "cpp",
+        "cstdint": "cpp",
+        "checksum.h": "c"
     },
     "search.exclude": {
         "build/": true
-    }
+    },
+    "idf.pythonInstallPath": "C:\\Users\\zjia0\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
 }

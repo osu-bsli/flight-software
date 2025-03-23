@@ -28,9 +28,9 @@ struct fc_adxl375
 
 struct fc_adxl375_data
 {
-  float acceleration_x;
-  float acceleration_y;
-  float acceleration_z;
+  float accel_x;
+  float accel_y;
+  float accel_z;
 };
 
 /*

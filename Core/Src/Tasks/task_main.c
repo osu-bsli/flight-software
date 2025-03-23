@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <task.h>
 #include <SEGGER_RTT.h>
-#include <mavlink_packets/mavlink.h>
 #include <ff.h>
 #include <fatfs.h>
 
