@@ -116,7 +116,7 @@
  * than the total amount of data expected and the first 2 bytes written to the buffer should be
  * ignored (datasheet pg. 218).
  * This function will block the current FreeRTOS task until the read finishes. */
-HAL_StatusTypeDef read_registers(struct fc_bmi323 *device, uint8_t reg, void *data, uint8_t length)
+static HAL_StatusTypeDef read_registers(struct fc_bmi323 *device, uint8_t reg, void *data, uint8_t length)
 {
     assert(length >= 4); /* minimum possible length = 2 dummy bytes + 1 register's worth of data = 4 bytes*/
 
@@ -149,7 +149,7 @@ HAL_StatusTypeDef read_registers(struct fc_bmi323 *device, uint8_t reg, void *da
 /* Starts writing multiple bytes starting from a register (useful for batch writing to multiple
  * contiguous registers at once).
  * This function will block the current FreeRTOS task until the write finishes. */
-HAL_StatusTypeDef write_registers(struct fc_bmi323 *device, uint8_t reg, void *data, uint8_t length)
+static HAL_StatusTypeDef write_registers(struct fc_bmi323 *device, uint8_t reg, void *data, uint8_t length)
 {
     HAL_StatusTypeDef status = HAL_I2C_Mem_Write_IT(device->hi2c, I2C_ADDRESS, reg, sizeof(reg),
                                                     (uint8_t *)data, length);

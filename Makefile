@@ -90,6 +90,7 @@ Core/Src/Tasks/task_sensors.c \
 Core/Src/common.c \
 Core/Src/Sensors/adxl375.c \
 Core/Src/Sensors/bmi323.c \
+Core/Src/Sensors/bm1422.c \
 Core/Src/Sensors/ms5607.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f_i2c.c \
