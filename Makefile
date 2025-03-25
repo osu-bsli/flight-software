@@ -181,9 +181,7 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FatFs/src \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
--IExternal/mavlink/ \
 -IExternal/RTT/ \
--I$(BUILD_DIR)/mavlink_generated/ \
 -IDrivers/BSP/Components/teseo_liv3f \
 -IGNSS/Target \
 -IMiddlewares/ST/lib_gnss/LibGNSS/Inc \
@@ -228,9 +226,6 @@ LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT_CUSTOM) $(LIBDIR) $(LIBS) -Wl,-M
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin 
-ifeq (,$(wildcard External/mavlink/pymavlink))
-    $(error External/mavlink/pymavlink is missing. Make sure your git submodules are updated. !)
-endif
 
 #######################################
 # build the application
