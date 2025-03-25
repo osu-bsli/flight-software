@@ -7,6 +7,7 @@
 #include "Sensors/ms5607.h"
 #include "Sensors/bm1422.h"
 #include "Tasks/tasks.h"
+#include "telemetry.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
@@ -59,19 +60,6 @@ static void sd_card_set_failed()
 {
   sd_card_working = false;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
-}
-
-static void telemetry_packet_make_header(struct telemetry_packet *p)
-{
-  // Copy in "FUCKPETER" magic
-  memcpy(p->magic, TELEMETRY_PACKET_MAGIC, sizeof(p->magic));
-  p->size = sizeof(struct telemetry_packet);
-
-  // Zero out the CRC16 field
-  p->crc16 = 0;
-
-  // Write CRC
-  p->crc16 = crc_modbus((const unsigned char*)p, sizeof(struct telemetry_packet));
 }
 
 static void task_sensors(void *argument)

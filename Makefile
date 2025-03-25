@@ -82,8 +82,8 @@ Middlewares/Third_Party/FreeRTOS/Source/timers.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
-External/RTT/SEGGER_RTT.c \
-External/RTT/SEGGER_RTT_printf.c \
+Core/Src/SEGGER_RTT.c \
+Core/Src/SEGGER_RTT_printf.c \
 Core/Src/Tasks/task_blinky.c \
 Core/Src/Tasks/task_main.c \
 Core/Src/Tasks/task_sensors.c \
@@ -106,11 +106,12 @@ Middlewares/ST/lib_gnss/LibNMEA/Src/NMEA_parser.c \
 Middlewares/Third_Party/FatFs/src/option/ccsbcs.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-Src/Airbrakes/airbrakes.c \
-Src/Airbrakes/UKF.c \
+Core/Src/Airbrakes/airbrakes.c \
+Core/Src/Airbrakes/UKF.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
-Src/crc16.c
+Core/Src/crc16.c \
+Core/Src/telemetry.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -181,7 +182,6 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FatFs/src \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
--IExternal/RTT/ \
 -IDrivers/BSP/Components/teseo_liv3f \
 -IGNSS/Target \
 -IMiddlewares/ST/lib_gnss/LibGNSS/Inc \
