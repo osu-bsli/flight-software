@@ -1,6 +1,5 @@
 #include "flight_software.h"
 #include "main.h"
-#include "Tasks/tasks.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
@@ -29,6 +28,7 @@ static StaticTask_t tcb;
  * an array of StackType_t variables. The size of StackType_t is dependent on
  * the platform. On ARM-based platforms (i.e. STM32), StackType_t is .
  */
+#define STACK_SIZE 1024
 static StackType_t stack[STACK_SIZE];
 
 /**

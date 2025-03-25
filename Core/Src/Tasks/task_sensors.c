@@ -6,7 +6,6 @@
 #include "Sensors/bmi323.h"
 #include "Sensors/ms5607.h"
 #include "Sensors/bm1422.h"
-#include "Tasks/tasks.h"
 #include "telemetry.h"
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
@@ -18,17 +17,17 @@
 #include <stdio.h>
 #include "Airbrakes/airbrakes.h"
 
-#define STACK_SIZE 65536
 
 /*
- * task_sensors.c
- *
- * Task that runs periodically to collect sensor data and make it available for
- * other tasks, for example the telemetry task and the airbrake task.
- */
+* task_sensors.c
+*
+* Task that runs periodically to collect sensor data and make it available for
+* other tasks, for example the telemetry task and the airbrake task.
+*/
 
 static TaskHandle_t handle;
 static StaticTask_t tcb;
+#define STACK_SIZE 65536
 static StackType_t stack[STACK_SIZE];
 
 static TickType_t time;
@@ -47,29 +46,23 @@ static SemaphoreHandle_t semaphore_i2c1;
 static SemaphoreHandle_t semaphore_i2c4;
 static SemaphoreHandle_t semaphore_uart6;
 
-static bool sd_card_working;
+static bool sdcard_is_working;
 
-static void sd_card_set_working()
+static void sdcard_set_working()
 {
   /* Turn on green LED to indicate SD card success */
-  sd_card_working = true;
+  sdcard_is_working = true;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
 }
 
-static void sd_card_set_failed()
+static void sdcard_set_failed()
 {
-  sd_card_working = false;
+  sdcard_is_working = false;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
 }
 
-static void task_sensors(void *argument)
+static FIL sdcard_and_logging_init()
 {
-  UNUSED(argument);
-
-  /* Create peripheral semaphores */
-  semaphore_i2c1 = xSemaphoreCreateBinary();
-  semaphore_i2c4 = xSemaphoreCreateBinary();
-  semaphore_uart6 = xSemaphoreCreateBinary();
 
   /* Set up SD card */
 
@@ -97,7 +90,7 @@ static void task_sensors(void *argument)
   if (fr_status == FR_OK)
   {
     SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
-    sd_card_set_working();
+    sdcard_set_working();
   }
   else
   {
@@ -124,8 +117,12 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
   }
-  f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
 
+  return log_csv;
+}
+
+static void sensors_init()
+{
   /* Initialize sensor drivers */
   HAL_StatusTypeDef status;
   status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
@@ -164,6 +161,21 @@ static void task_sensors(void *argument)
   {
     SEGGER_RTT_printf(0, "ms5607 initialization failed\n");
   }
+}
+
+static void task_sensors(void *argument)
+{
+  UNUSED(argument);
+
+  /* Create peripheral semaphores */
+  semaphore_i2c1 = xSemaphoreCreateBinary();
+  semaphore_i2c4 = xSemaphoreCreateBinary();
+  semaphore_uart6 = xSemaphoreCreateBinary();
+
+  FIL log_csv = sdcard_and_logging_init();
+  f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
+  
+  sensors_init();
 
   while (true)
   {
@@ -180,7 +192,7 @@ static void task_sensors(void *argument)
 
     struct fc_bm1422_data bm1422_data;
     fc_bm1422_process(&bm1422, &bm1422_data);
-    
+
     int time_boot_ms = time;
     float accel_x = bmi323_data.accel_x;
     float accel_y = bmi323_data.accel_y;
@@ -211,39 +223,40 @@ static void task_sensors(void *argument)
                                       temperature_c);
 
     struct telemetry_packet packet = {
-      .status_flags = 0,
-      .time_boot_ms = time_boot_ms,
-      .ms5607_pressure_mbar = pressure_mbar,
-      .ms5607_temperature_c = temperature_c,
-      .bmi323_accel_x = accel_x,
-      .bmi323_accel_y = accel_y,
-      .bmi323_accel_z = accel_z,
-      .bmi323_gyro_x = gyro_x,
-      .bmi323_gyro_y = gyro_y,
-      .bmi323_gyro_z = gyro_z,
-      .adxl375_accel_x = accel_x,
-      .adxl375_accel_y = accel_y,
-      .adxl375_accel_z = accel_z,
+        .status_flags = 0,
+        .time_boot_ms = time_boot_ms,
+        .ms5607_pressure_mbar = pressure_mbar,
+        .ms5607_temperature_c = temperature_c,
+        .bmi323_accel_x = accel_x,
+        .bmi323_accel_y = accel_y,
+        .bmi323_accel_z = accel_z,
+        .bmi323_gyro_x = gyro_x,
+        .bmi323_gyro_y = gyro_y,
+        .bmi323_gyro_z = gyro_z,
+        .adxl375_accel_x = accel_x,
+        .adxl375_accel_y = accel_y,
+        .adxl375_accel_z = accel_z,
     };
 
-    if (sd_card_working) packet.status_flags |= STATUS_FLAGS_SD_CARD_WORKING;
+    if (sdcard_is_working)
+      packet.status_flags |= STATUS_FLAGS_SD_CARD_WORKING;
 
     telemetry_packet_make_header(&packet);
 
-    HAL_UART_Transmit_IT(&huart6, (uint8_t*)&packet, sizeof(packet));
+    HAL_UART_Transmit_IT(&huart6, (uint8_t *)&packet, sizeof(packet));
     SEGGER_RTT_printf(0, "Telemetry packet sent: %d bytes\n", sizeof(packet));
 
     uint32_t chars_written_to_sd = f_printf(&log_csv, "%s", buf);
     if (chars_written_to_sd < 0)
     {
-      sd_card_set_failed();
+      sdcard_set_failed();
     }
 
     /* flush data to SD card */
-    fr_status = f_sync(&log_csv);
+    FRESULT fr_status = f_sync(&log_csv);
     if (fr_status != FR_OK)
     {
-      sd_card_set_failed();
+      sdcard_set_failed();
     }
 
     HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
@@ -261,7 +274,7 @@ void task_sensors_start(void)
 
   handle = xTaskCreateStatic(
       task_sensors,     /* Function that implements the task. */
-      "blinky",         /* Text name for the task. */
+      "sensors",         /* Text name for the task. */
       STACK_SIZE,       /* Number of indexes in the xStack array. */
       NULL,             /* Parameter passed into the task. */
       tskIDLE_PRIORITY, /* Priority at which the task is created. */
@@ -310,5 +323,5 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
-  SEGGER_RTT_printf(0, "I2C non-blocking error\n");
+  SEGGER_RTT_printf(0, "HAL_I2C_ErrorCallback called\n");
 }
