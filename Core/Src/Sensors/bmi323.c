@@ -169,6 +169,7 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
 {
     bmi323->hi2c = hi2c;
     bmi323->i2c_semaphore = i2c_semaphore;
+    bmi323->isInDegradedState = false;
 
     /* when writing to registers with reserved bits, must read, update, then write (datasheet pg. 62) */
     /* write calibration values to registers (datasheet pg. 55) */
@@ -183,26 +184,39 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     uint16_t chip_id_value[2] = {0x1234, 0x5678};
     status = read_registers(bmi323, REGISTER_CHIP_ID, chip_id_value, sizeof(chip_id_value));
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
+
     if ((chip_id_value[1] & 0xFF) != 0x43u)
     {
         SEGGER_RTT_printf(0, "bmi323: device ID does not match expected\n");
-        return HAL_ERROR;
+        status = HAL_ERROR;
+        goto error;
     }
 
     /* check ERR_REG before enabling sensors (datasheet pg. 67) */
     uint16_t err_value[2] = {0x1234, 0x5678};
     status = read_registers(bmi323, REGISTER_ERR_REG, err_value, sizeof(err_value));
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
+
     if (err_value[1])
-        return HAL_ERROR;
+    {
+        status = HAL_ERROR;
+        goto error;
+    }
 
     /* check STATUS */
     uint16_t status_value[2] = {0x1234, 0x5678};
     status = read_registers(bmi323, REGISTER_STATUS, status_value, sizeof(status_value));
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
+
     // The BMI323 doesn't reset when the STM32 does, so the powerup flag may not always be set
     //    if ((status_value[1] & 1) == 0) BKPT_ERROR;
 
@@ -210,7 +224,9 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
 
     status = write_registers(bmi323, REGISTER_INT_CONF, &int_conf_data[2], 2);
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     /* =================================================================================== */
     /* configure ACC_CONF register (acc_mode, acc_range, acc_bw, acc_avg_num, and acc_odr) */
@@ -219,7 +235,9 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     uint8_t acc_conf_bytes[4]; /* 2 dummy bytes required by read_registers() */
     status = read_registers(bmi323, REGISTER_ACC_CONF, acc_conf_bytes, sizeof(acc_conf_bytes));
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     /* ACC_CONF.acc_mode =    0b111  for normal power mode (datasheet pg. 22)
      * ACC_CONF.acc_avg_num = 0b000  for no averaging
@@ -236,7 +254,9 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     acc_conf_bytes[2] |= 0x9bu;
     status = write_registers(bmi323, REGISTER_ACC_CONF, &acc_conf_bytes[2], 2); /* no dummy bytes when writing */
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     /* =================================================================================== */
     /* configure GYR_CONF register (gyr_mode, gyr_range, gyr_bw, gyr_avg_num, and gyr_odr) */
@@ -245,7 +265,9 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     uint8_t gyr_conf_bytes[4]; /* 2 dummy bytes required by read_registers() */
     status = read_registers(bmi323, REGISTER_GYR_CONF, gyr_conf_bytes, sizeof(acc_conf_bytes));
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     /* GYR_CONF.gyr_mode =    0b111  for normal power mode (datasheet pg. 22)
      * GYR_CONF.gyr_avg_num = 0b000  for no averaging
@@ -263,16 +285,23 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     status = write_registers(bmi323, REGISTER_GYR_CONF, &gyr_conf_bytes[2],
                              sizeof(gyr_conf_bytes) - 2); /* no dummy bytes when writing */
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     // TODO: Double check these
     uint8_t int_map2_bytes[2] = {40u, 05u};
     status = write_registers(bmi323, REGISTER_INT_MAP2, int_map2_bytes, sizeof(int_map2_bytes));
-
     if (status != HAL_OK)
-        return status;
+    {
+        goto error;
+    }
 
     return HAL_OK;
+
+error:
+    bmi323->isInDegradedState = true;
+    return status;
 }
 
 HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_data *data)
@@ -301,7 +330,7 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
 
         status = read_registers(bmi323, REGISTER_GYR_DATA_X, gyro_data, sizeof(gyro_data));
         if (status != HAL_OK)
-            return status;
+            goto error;
 
         data->gyro_x = scale * (float)gyro_data[1];
         data->gyro_y = scale * (float)gyro_data[2];
@@ -317,7 +346,7 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
 
         status = read_registers(bmi323, REGISTER_TEMP_DATA, temp_data, sizeof(temp_data));
         if (status != HAL_OK)
-            return status;
+            goto error;
 
         data->temp = (float)temp_data[1] / 512.0f + 23.0f;
     }
@@ -331,7 +360,7 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
 
         status = read_registers(bmi323, REGISTER_ACC_DATA_X, accel_data, sizeof(accel_data));
         if (status != HAL_OK)
-            return status;
+            goto error;
 
         float scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
 
@@ -343,4 +372,8 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
     data->kernel_timestamp = xTaskGetTickCount();
 
     return HAL_OK;
+
+error:
+    bmi323->isInDegradedState = true;
+    return status;
 }

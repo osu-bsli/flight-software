@@ -14,6 +14,12 @@
 
 /* struct */
 
+struct fc_bmi323 {
+    I2C_HandleTypeDef *hi2c; /* the i2c peripheral */
+    SemaphoreHandle_t *i2c_semaphore;
+	bool isInDegradedState;
+};
+
 struct fc_bmi323_data {
     /* datasheet pg. 22 */
 
@@ -38,11 +44,6 @@ struct fc_bmi323_data {
 
     float time; /* sensor keeps timestamps for measurements (datasheet pg. 25) */
     uint32_t kernel_timestamp; /* in kernel ticks */
-};
-
-struct fc_bmi323 {
-    I2C_HandleTypeDef *hi2c; /* the i2c peripheral */
-    SemaphoreHandle_t *i2c_semaphore;
 };
 
 /* functions */

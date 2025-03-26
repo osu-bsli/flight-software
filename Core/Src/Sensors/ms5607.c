@@ -207,6 +207,7 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
     /* reset struct */
     device->i2c_handle = i2c_handle;
     device->i2c_semaphore = i2c_semaphore;
+    device->isInDegradedState = false;
 
     HAL_StatusTypeDef status;
 
@@ -285,6 +286,7 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
 
 error:
     SEGGER_RTT_printf(0, "ms5607: init failure\n");
+    device->isInDegradedState = true;
     return status;
 }
 
@@ -302,13 +304,13 @@ HAL_StatusTypeDef fc_ms5607_process(struct fc_ms5607 *device, struct fc_ms5607_d
             status = read_temperature_data(device);
             if (status != HAL_OK)
             {
-                return status;
+                goto error;
             }
 
             status = start_pressure_conversion(device);
             if (status != HAL_OK)
             {
-                return status;
+                goto error;
             }
             device->conversion_started_ms = xTaskGetTickCount();
             device->state = STATE_CONVERTING_PRESSURE;
@@ -320,13 +322,13 @@ HAL_StatusTypeDef fc_ms5607_process(struct fc_ms5607 *device, struct fc_ms5607_d
             status = read_pressure_data(device);
             if (status != HAL_OK)
             {
-                return status;
+                goto error;
             }
 
             status = start_temperature_conversion(device);
             if (status != HAL_OK)
             {
-                return status;
+                goto error;
             }
             device->conversion_started_ms = xTaskGetTickCount();
             device->state = STATE_CONVERTING_TEMPERATURE;
@@ -346,4 +348,8 @@ HAL_StatusTypeDef fc_ms5607_process(struct fc_ms5607 *device, struct fc_ms5607_d
     // SEGGER_RTT_printf(0, "ms5607: temperature_c: %s\n", buf);
 
     return HAL_OK;
+
+error:
+    device->isInDegradedState = true;
+    return status;
 }

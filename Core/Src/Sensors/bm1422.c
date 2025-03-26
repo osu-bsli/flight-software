@@ -62,6 +62,7 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 {
 	device->i2c_handle = i2c_handle;
 	device->i2c_semaphore = i2c_semaphore;
+	device->isInDegradedState = false;
 
 	/* =================================== */
 	/* check that the device id is correct */
@@ -73,12 +74,13 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 	status = read_registers(device, REGISTER_WIA, &data, 1);
 	if (status != HAL_OK)
 	{
-		return status;
+		goto error;
 	}
 	if (data != WHO_AM_I)
 	{
 		SEGGER_RTT_printf(0, SENSOR_NAME ": WHO_AM_I mismatch: %d\n", data);
-		return HAL_ERROR;
+		status = HAL_ERROR;
+		goto error;
 	}
 
 	/* Set the Power Control Bit for Magnometer
@@ -90,10 +92,14 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 	if (status != HAL_OK)
 	{
 		SEGGER_RTT_printf(0, SENSOR_NAME ": control write failed\n");
-		return status;
+		goto error;
 	}
 
 	return HAL_OK;
+
+error:
+	device->isInDegradedState = true;
+	return status;
 }
 
 HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_data *data)
@@ -106,7 +112,7 @@ HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_d
 	if (status != HAL_OK)
 	{
 		SEGGER_RTT_printf(0, SENSOR_NAME ": read failure\n");
-		return status;
+		goto error;
 	}
 
 	int16_t raw_magnetic_strength_x = (int16_t)((raw_data[0] << 8) | raw_data[1]);
@@ -127,4 +133,8 @@ HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_d
 	SEGGER_RTT_WriteString(0, buf);
 
 	return HAL_OK;
+
+error:
+	device->isInDegradedState = true;
+	return status;
 }

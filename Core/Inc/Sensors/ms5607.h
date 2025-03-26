@@ -7,12 +7,14 @@
 
 #include "stm32h7xx_hal.h"
 #include <FreeRTOS.h>
+#include <stdbool.h>
 #include <semphr.h>
 
 struct fc_ms5607
 {
     I2C_HandleTypeDef *i2c_handle; /* the i2c peripheral */
     SemaphoreHandle_t *i2c_semaphore;
+    bool isInDegradedState;
 
     uint8_t state;
     float last_pressure_mbar;

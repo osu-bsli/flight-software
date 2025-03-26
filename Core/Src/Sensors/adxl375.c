@@ -140,6 +140,7 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   /* reset struct */
   device->i2c_handle = i2c_handle;
   device->i2c_semaphore = i2c_semaphore;
+  device->isInDegradedState = false;
 
   HAL_StatusTypeDef status;
   uint8_t data;
@@ -148,12 +149,13 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   status = read_registers(device, REGISTER_DEVID, &data, sizeof(data));
   if (status != HAL_OK)
   {
-    return status;
+    goto error;
   }
   if (data != DEVICE_ID)
   {
     SEGGER_RTT_printf(0, "adxl375: device ID does not match expected\n");
-    return HAL_ERROR;
+    status = HAL_ERROR;
+    goto error;
   }
 
   /* Set measure bit in POWER_CTL register (pg. 22) */
@@ -161,24 +163,28 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   status = write_registers(device, REGISTER_POWER_CTL, &data, sizeof(data));
   if (status != HAL_OK)
   {
-    return status;
+    goto error;
   }
 
   data = 0b00001011;
   status = write_registers(device, REGISTER_DATA_FORMAT, &data, sizeof(data));
   if (status != HAL_OK)
   {
-    return status;
+    goto error;
   }
 
   data = REGISTER_BW_RATE_100HZ; // disable low power, 100 Hz
   status = write_registers(device, REGISTER_BW_RATE, &data, sizeof(data));
   if (status != HAL_OK)
   {
-    return status;
+    goto error;
   }
 
   return HAL_OK;
+
+error:
+  device->isInDegradedState = true;
+  return status;
 }
 
 HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl375_data *data)
@@ -195,7 +201,7 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl37
   status = read_registers(device, REGISTER_DATAX0, raw_accel_data, sizeof(raw_accel_data));
   if (status != HAL_OK)
   {
-    return HAL_ERROR;
+    goto error;
   }
 
   /* ===================================== */
@@ -230,4 +236,8 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl37
   // SEGGER_RTT_printf(0, "adxl375: accel z: %s\n", buf);
 
   return HAL_OK;
+
+error:
+  device->isInDegradedState = true;
+  return status;
 }

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "stm32h7xx_hal.h"
+#include <stdbool.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
 
@@ -24,6 +25,7 @@ struct fc_adxl375
 {
   I2C_HandleTypeDef *i2c_handle;
   SemaphoreHandle_t *i2c_semaphore;
+  bool isInDegradedState;
 };
 
 struct fc_adxl375_data
