@@ -281,7 +281,6 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
     device->state = STATE_CONVERTING_TEMPERATURE;
 
     // Initialization succeeded
-    SEGGER_RTT_printf(0, "ms5607: init succeeded\n");
     return HAL_OK;
 
 error:

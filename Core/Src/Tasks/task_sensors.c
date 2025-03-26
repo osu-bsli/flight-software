@@ -94,7 +94,14 @@ static FIL sdcard_and_logging_init()
   }
   else
   {
-    SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
+    switch (fr_status) {
+      case FR_NO_FILESYSTEM:
+        SEGGER_RTT_printf(0, "SD Card f_mount error: there is no filesystem on the SD card\n", fr_status);
+        break;
+      default:
+        SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
+        break;
+    }
   }
 
   /* Find a %d.csv filename that is free to use */
@@ -136,7 +143,7 @@ static void sensors_init()
 {
   /* Initialize sensor drivers */
   HAL_StatusTypeDef status;
-  
+
   status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
   sensor_print_init_success_state("bm1422", status == HAL_OK);
 
@@ -159,8 +166,8 @@ static void task_sensors(void *argument)
   semaphore_i2c4 = xSemaphoreCreateBinary();
   semaphore_uart6 = xSemaphoreCreateBinary();
 
-  FIL log_csv = sdcard_and_logging_init();
-  f_printf(&log_csv, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
+  FIL log_file = sdcard_and_logging_init();
+  f_printf(&log_file, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
   
   sensors_init();
 
@@ -181,33 +188,6 @@ static void task_sensors(void *argument)
     fc_ms5607_process(&ms5607, &ms5607_data);
 
     int time_boot_ms = time;
-    float accel_x = bmi323_data.accel_x;
-    float accel_y = bmi323_data.accel_y;
-    float accel_z = bmi323_data.accel_z;
-    float gyro_x = bmi323_data.gyro_x;
-    float gyro_y = bmi323_data.gyro_y;
-    float gyro_z = bmi323_data.gyro_z;
-    float high_g_accel_x = adxl375_data.accel_x;
-    float high_g_accel_y = adxl375_data.accel_y;
-    float high_g_accel_z = adxl375_data.accel_z;
-    float pressure_mbar = ms5607_data.pressure_mbar;
-    float temperature_c = ms5607_data.temperature_c;
-    // TODO: Add bm1422 data to telemetry packet
-    char buf[256];
-    /* Use snprintf because f_printf() does not support floats */
-    uint32_t chars_printed = snprintf(buf, 256, "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-                                      time_boot_ms,
-                                      accel_x,
-                                      accel_y,
-                                      accel_z,
-                                      gyro_x,
-                                      gyro_y,
-                                      gyro_z,
-                                      high_g_accel_x,
-                                      high_g_accel_y,
-                                      high_g_accel_z,
-                                      pressure_mbar,
-                                      temperature_c);
 
     uint8_t status_flags = 0;
     if (sdcard_is_in_degraded_state) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;
@@ -219,32 +199,34 @@ static void task_sensors(void *argument)
     struct telemetry_packet packet = {
         .status_flags = status_flags,
         .time_boot_ms = time_boot_ms,
-        .ms5607_pressure_mbar = pressure_mbar,
-        .ms5607_temperature_c = temperature_c,
-        .bmi323_accel_x = accel_x,
-        .bmi323_accel_y = accel_y,
-        .bmi323_accel_z = accel_z,
-        .bmi323_gyro_x = gyro_x,
-        .bmi323_gyro_y = gyro_y,
-        .bmi323_gyro_z = gyro_z,
-        .adxl375_accel_x = accel_x,
-        .adxl375_accel_y = accel_y,
-        .adxl375_accel_z = accel_z,
+        .ms5607_pressure_mbar = ms5607_data.pressure_mbar,
+        .ms5607_temperature_c = ms5607_data.temperature_c,
+        .bmi323_accel_x = bmi323_data.accel_x,
+        .bmi323_accel_y = bmi323_data.accel_y,
+        .bmi323_accel_z = bmi323_data.accel_z,
+        .bmi323_gyro_x = bmi323_data.gyro_x,
+        .bmi323_gyro_y = bmi323_data.gyro_y,
+        .bmi323_gyro_z = bmi323_data.gyro_z,
+        .adxl375_accel_x = adxl375_data.accel_x,
+        .adxl375_accel_y = adxl375_data.accel_y,
+        .adxl375_accel_z = adxl375_data.accel_z,
     };
 
     telemetry_packet_make_header(&packet);
 
+    // TODO: Just saturate the UART link tbh
     HAL_UART_Transmit_IT(&huart6, (uint8_t *)&packet, sizeof(packet));
-    SEGGER_RTT_printf(0, "Telemetry packet sent: %d bytes\n", sizeof(packet));
+    // SEGGER_RTT_printf(0, "Telemetry packet sent: %d bytes\n", sizeof(packet));
 
-    uint32_t chars_written_to_sd = f_printf(&log_csv, "%s", buf);
-    if (chars_written_to_sd < 0)
+    unsigned int bytes_written_to_sd;
+    FRESULT fr_status = f_write(&log_file, (uint8_t *)&packet, sizeof(packet), &bytes_written_to_sd);
+    if (bytes_written_to_sd < 0 || fr_status != FR_OK)
     {
       sdcard_set_degraded();
     }
 
     /* flush data to SD card */
-    FRESULT fr_status = f_sync(&log_csv);
+    fr_status = f_sync(&log_file);
     if (fr_status != FR_OK)
     {
       sdcard_set_degraded();

@@ -124,13 +124,13 @@ HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_d
 	data->magnetic_strength_y = (float)raw_magnetic_strength_y;
 	data->magnetic_strength_z = (float)raw_magnetic_strength_z;
 
-	char buf[64];
-	snprintf(buf, 64, SENSOR_NAME ": mag x: %f\n", data->magnetic_strength_x);
-	SEGGER_RTT_WriteString(0, buf);
-	snprintf(buf, 64, SENSOR_NAME ": mag y: %f\n", data->magnetic_strength_y);
-	SEGGER_RTT_WriteString(0, buf);
-	snprintf(buf, 64, SENSOR_NAME ": mag z: %f\n", data->magnetic_strength_z);
-	SEGGER_RTT_WriteString(0, buf);
+	// char buf[64];
+	// snprintf(buf, 64, SENSOR_NAME ": mag x: %f\n", data->magnetic_strength_x);
+	// SEGGER_RTT_WriteString(0, buf);
+	// snprintf(buf, 64, SENSOR_NAME ": mag y: %f\n", data->magnetic_strength_y);
+	// SEGGER_RTT_WriteString(0, buf);
+	// snprintf(buf, 64, SENSOR_NAME ": mag z: %f\n", data->magnetic_strength_z);
+	// SEGGER_RTT_WriteString(0, buf);
 
 	return HAL_OK;
 
