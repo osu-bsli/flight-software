@@ -169,7 +169,7 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
 {
     bmi323->hi2c = hi2c;
     bmi323->i2c_semaphore = i2c_semaphore;
-    bmi323->isInDegradedState = false;
+    bmi323->is_in_degraded_state = false;
 
     /* when writing to registers with reserved bits, must read, update, then write (datasheet pg. 62) */
     /* write calibration values to registers (datasheet pg. 55) */
@@ -300,7 +300,7 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
     return HAL_OK;
 
 error:
-    bmi323->isInDegradedState = true;
+    bmi323->is_in_degraded_state = true;
     return status;
 }
 
@@ -374,6 +374,6 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
     return HAL_OK;
 
 error:
-    bmi323->isInDegradedState = true;
+    bmi323->is_in_degraded_state = true;
     return status;
 }

@@ -207,7 +207,7 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
     /* reset struct */
     device->i2c_handle = i2c_handle;
     device->i2c_semaphore = i2c_semaphore;
-    device->isInDegradedState = false;
+    device->is_in_degraded_state = false;
 
     HAL_StatusTypeDef status;
 
@@ -286,7 +286,7 @@ HAL_StatusTypeDef fc_ms5607_initialize(struct fc_ms5607 *device, I2C_HandleTypeD
 
 error:
     SEGGER_RTT_printf(0, "ms5607: init failure\n");
-    device->isInDegradedState = true;
+    device->is_in_degraded_state = true;
     return status;
 }
 
@@ -350,6 +350,6 @@ HAL_StatusTypeDef fc_ms5607_process(struct fc_ms5607 *device, struct fc_ms5607_d
     return HAL_OK;
 
 error:
-    device->isInDegradedState = true;
+    device->is_in_degraded_state = true;
     return status;
 }

@@ -62,7 +62,7 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 {
 	device->i2c_handle = i2c_handle;
 	device->i2c_semaphore = i2c_semaphore;
-	device->isInDegradedState = false;
+	device->is_in_degraded_state = false;
 
 	/* =================================== */
 	/* check that the device id is correct */
@@ -98,7 +98,7 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 	return HAL_OK;
 
 error:
-	device->isInDegradedState = true;
+	device->is_in_degraded_state = true;
 	return status;
 }
 
@@ -135,6 +135,6 @@ HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_d
 	return HAL_OK;
 
 error:
-	device->isInDegradedState = true;
+	device->is_in_degraded_state = true;
 	return status;
 }

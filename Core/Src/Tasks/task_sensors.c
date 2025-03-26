@@ -46,18 +46,18 @@ static SemaphoreHandle_t semaphore_i2c1;
 static SemaphoreHandle_t semaphore_i2c4;
 static SemaphoreHandle_t semaphore_uart6;
 
-static bool sdcard_is_working;
+static bool sdcard_is_in_degraded_state;
 
-static void sdcard_set_working()
+static void sdcard_set_not_degraded()
 {
   /* Turn on green LED to indicate SD card success */
-  sdcard_is_working = true;
+  sdcard_is_in_degraded_state = false;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
 }
 
-static void sdcard_set_failed()
+static void sdcard_set_degraded()
 {
-  sdcard_is_working = false;
+  sdcard_is_in_degraded_state = true;
   HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
 }
 
@@ -90,7 +90,7 @@ static FIL sdcard_and_logging_init()
   if (fr_status == FR_OK)
   {
     SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
-    sdcard_set_working();
+    sdcard_set_not_degraded();
   }
   else
   {
@@ -121,46 +121,33 @@ static FIL sdcard_and_logging_init()
   return log_csv;
 }
 
+static void sensor_print_init_success_state(const char* name, bool was_successful) {
+  if (was_successful)
+  {
+    SEGGER_RTT_printf(0, "%s initialization succeeded\n", name);
+  }
+  else
+  {
+    SEGGER_RTT_printf(0, "%s initialization failed\n", name);
+  }
+}
+
 static void sensors_init()
 {
   /* Initialize sensor drivers */
   HAL_StatusTypeDef status;
+  
   status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
-  if (status == HAL_OK)
-  {
-    SEGGER_RTT_printf(0, "bm1422 initialization success\n");
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "bm1422 initialization failed\n");
-  }
+  sensor_print_init_success_state("bm1422", status == HAL_OK);
+
   status = fc_adxl375_initialize(&adxl375, &hi2c1, &semaphore_i2c1);
-  if (status == HAL_OK)
-  {
-    SEGGER_RTT_printf(0, "adxl375 initialization success\n");
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "adxl375 initialization failed\n");
-  }
+  sensor_print_init_success_state("adxl375", status == HAL_OK);
+
   status = fc_bmi323_initialize(&bmi323, &hi2c1, &semaphore_i2c1);
-  if (status == HAL_OK)
-  {
-    SEGGER_RTT_printf(0, "bmi323 initialization success\n");
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "bmi323 initialization failed\n");
-  }
+  sensor_print_init_success_state("bmi323", status == HAL_OK);
+
   status = fc_ms5607_initialize(&ms5607, &hi2c4, &semaphore_i2c4);
-  if (status == HAL_OK)
-  {
-    SEGGER_RTT_printf(0, "ms5607 initialization success\n");
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "ms5607 initialization failed\n");
-  }
+  sensor_print_init_success_state("ms5607", status == HAL_OK);
 }
 
 static void task_sensors(void *argument)
@@ -184,14 +171,14 @@ static void task_sensors(void *argument)
     struct fc_adxl375_data adxl375_data;
     fc_adxl375_process(&adxl375, &adxl375_data);
 
-    struct fc_ms5607_data ms5607_data;
-    fc_ms5607_process(&ms5607, &ms5607_data);
+    struct fc_bm1422_data bm1422_data;
+    fc_bm1422_process(&bm1422, &bm1422_data);
 
     struct fc_bmi323_data bmi323_data;
     fc_bmi323_process(&bmi323, &bmi323_data);
 
-    struct fc_bm1422_data bm1422_data;
-    fc_bm1422_process(&bm1422, &bm1422_data);
+    struct fc_ms5607_data ms5607_data;
+    fc_ms5607_process(&ms5607, &ms5607_data);
 
     int time_boot_ms = time;
     float accel_x = bmi323_data.accel_x;
@@ -222,8 +209,15 @@ static void task_sensors(void *argument)
                                       pressure_mbar,
                                       temperature_c);
 
+    uint8_t status_flags = 0;
+    if (sdcard_is_in_degraded_state) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;
+    if (adxl375.is_in_degraded_state) status_flags |= STATUS_FLAGS_ADXL375_DEGRADED;
+    if (bm1422.is_in_degraded_state) status_flags |= STATUS_FLAGS_BM1422_DEGRADED;
+    if (bmi323.is_in_degraded_state) status_flags |= STATUS_FLAGS_BMI323_DEGRADED;
+    if (ms5607.is_in_degraded_state) status_flags |= STATUS_FLAGS_MS5607_DEGRADED;
+
     struct telemetry_packet packet = {
-        .status_flags = 0,
+        .status_flags = status_flags,
         .time_boot_ms = time_boot_ms,
         .ms5607_pressure_mbar = pressure_mbar,
         .ms5607_temperature_c = temperature_c,
@@ -238,9 +232,6 @@ static void task_sensors(void *argument)
         .adxl375_accel_z = accel_z,
     };
 
-    if (sdcard_is_working)
-      packet.status_flags |= STATUS_FLAGS_SD_CARD_WORKING;
-
     telemetry_packet_make_header(&packet);
 
     HAL_UART_Transmit_IT(&huart6, (uint8_t *)&packet, sizeof(packet));
@@ -249,14 +240,14 @@ static void task_sensors(void *argument)
     uint32_t chars_written_to_sd = f_printf(&log_csv, "%s", buf);
     if (chars_written_to_sd < 0)
     {
-      sdcard_set_failed();
+      sdcard_set_degraded();
     }
 
     /* flush data to SD card */
     FRESULT fr_status = f_sync(&log_csv);
     if (fr_status != FR_OK)
     {
-      sdcard_set_failed();
+      sdcard_set_degraded();
     }
 
     HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);

@@ -140,7 +140,7 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   /* reset struct */
   device->i2c_handle = i2c_handle;
   device->i2c_semaphore = i2c_semaphore;
-  device->isInDegradedState = false;
+  device->is_in_degraded_state = false;
 
   HAL_StatusTypeDef status;
   uint8_t data;
@@ -183,7 +183,7 @@ HAL_StatusTypeDef fc_adxl375_initialize(struct fc_adxl375 *device,
   return HAL_OK;
 
 error:
-  device->isInDegradedState = true;
+  device->is_in_degraded_state = true;
   return status;
 }
 
@@ -238,6 +238,6 @@ HAL_StatusTypeDef fc_adxl375_process(struct fc_adxl375 *device, struct fc_adxl37
   return HAL_OK;
 
 error:
-  device->isInDegradedState = true;
+  device->is_in_degraded_state = true;
   return status;
 }

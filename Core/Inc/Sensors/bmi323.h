@@ -17,7 +17,7 @@
 struct fc_bmi323 {
     I2C_HandleTypeDef *hi2c; /* the i2c peripheral */
     SemaphoreHandle_t *i2c_semaphore;
-	bool isInDegradedState;
+	bool is_in_degraded_state;
 };
 
 struct fc_bmi323_data {

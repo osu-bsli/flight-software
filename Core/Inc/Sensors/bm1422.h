@@ -16,7 +16,7 @@
 struct fc_bm1422 {
 	I2C_HandleTypeDef *i2c_handle;
 	SemaphoreHandle_t *i2c_semaphore;
-	bool isInDegradedState;
+	bool is_in_degraded_state;
 };
 
 struct fc_bm1422_data {
