@@ -31,7 +31,8 @@
 #define REGISTER_CNTL2 0x1C
 #define REGISTER_CNTL3 0x1D
 #define REGISTER_AVE_A 0x40
-#define REGISTER_CNTL4 0x5C
+#define REGISTER_CNTL4_L 0x5C
+#define REGISTER_CNTL4_H 0x5D
 #define REGISTER_TEMP 0x60 // LSB
 #define REGISTER_OFF_X 0x6C
 #define REGISTER_OFF_Y 0x72
@@ -83,15 +84,33 @@ HAL_StatusTypeDef fc_bm1422_initialize(struct fc_bm1422 *device, I2C_HandleTypeD
 		goto error;
 	}
 
-	/* Set the Power Control Bit for Magnometer
-	 * Default Setting: 0x22 -> 00100010 (pg.12)*/
-	data = 0b01101100u;
-
-	/* Start i2c write */
+	// power on
+	// 14-bit mode
+	// ODR = 100 Hz
+	// continuous sampling mode
+	data = 0b11001000;
 	status = write_registers(device, REGISTER_CNTL1, &data, 1);
 	if (status != HAL_OK)
 	{
-		SEGGER_RTT_printf(0, SENSOR_NAME ": control write failed\n");
+		SEGGER_RTT_printf(0, SENSOR_NAME ": CNTL1 write failed\n");
+		goto error;
+	}
+
+	// write anything to CNTL4 high byte (0x5D) to set RSTB_LV=1
+	data = 0x00;
+	status = write_registers(device, REGISTER_CNTL4_H, &data, 1);
+	if (status != HAL_OK)
+	{
+		SEGGER_RTT_printf(0, SENSOR_NAME ": CNTL4 write failed\n");
+		goto error;
+	}
+
+	// FORCE (bit 6) = 1 in CNTL3 to start measurements
+	data = 0b01000000;
+	status = write_registers(device, REGISTER_CNTL3, &data, 1);
+	if (status != HAL_OK)
+	{
+		SEGGER_RTT_printf(0, SENSOR_NAME ": CNTL3 write failed\n");
 		goto error;
 	}
 
@@ -115,14 +134,16 @@ HAL_StatusTypeDef fc_bm1422_process(struct fc_bm1422 *device, struct fc_bm1422_d
 		goto error;
 	}
 
-	int16_t raw_magnetic_strength_x = (int16_t)((raw_data[0] << 8) | raw_data[1]);
-	int16_t raw_magnetic_strength_y = (int16_t)((raw_data[2] << 8) | raw_data[3]);
-	int16_t raw_magnetic_strength_z = (int16_t)((raw_data[4] << 8) | raw_data[5]);
+	int16_t raw_magnetic_strength_x = (int16_t)((raw_data[1] << 8) | raw_data[0]);
+	int16_t raw_magnetic_strength_y = (int16_t)((raw_data[3] << 8) | raw_data[2]);
+	int16_t raw_magnetic_strength_z = (int16_t)((raw_data[5] << 8) | raw_data[4]);
+
+	float scale = 0.042; // 0.042 microTesla / LSB
 
 	/* Process Raw Data */
-	data->magnetic_strength_x = (float)raw_magnetic_strength_x;
-	data->magnetic_strength_y = (float)raw_magnetic_strength_y;
-	data->magnetic_strength_z = (float)raw_magnetic_strength_z;
+	data->magnetic_strength_x = (float)raw_magnetic_strength_x * scale;
+	data->magnetic_strength_y = (float)raw_magnetic_strength_y * scale;
+	data->magnetic_strength_z = (float)raw_magnetic_strength_z * scale;
 
 	// char buf[64];
 	// snprintf(buf, 64, SENSOR_NAME ": mag x: %f\n", data->magnetic_strength_x);

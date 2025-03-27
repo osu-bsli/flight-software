@@ -243,15 +243,15 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
      * ACC_CONF.acc_avg_num = 0b000  for no averaging
      * ACC_CONF.acc_bw =      0b1    for most accurate filtering (?)
      * ACC_CONF.acc_range =   0b001  for +/- 4 g range (datasheet pg. 92)
-     * ACC_CONF.acc_odr =     0b1011 for 800 Hz sample rate (we may change this later)
+     * ACC_CONF.acc_odr =     0b1000 for 100 Hz sample rate
      * format: [x:1][acc_mode:3][x:1][acc_avg_num:3]_[acc_bw:1][acc_range:3][acc_odr:4]
-     * binary: [x]  [111]       [x]  [000]           [1]       [001]        [1011]
-     * hex:    0x70                                  0x9b
+     * binary: [x]  [111]       [x]  [000]           [1]       [001]        [1000]
+     * hex:    0x70                                  0x98
      */
     acc_conf_bytes[3] &= 0x88u; /* erase non-reserved bits */
     acc_conf_bytes[2] &= 0x00u;
     acc_conf_bytes[3] |= 0x70u; /* write to non-reserved bits */
-    acc_conf_bytes[2] |= 0x9bu;
+    acc_conf_bytes[2] |= 0x98u;
     status = write_registers(bmi323, REGISTER_ACC_CONF, &acc_conf_bytes[2], 2); /* no dummy bytes when writing */
     if (status != HAL_OK)
     {
@@ -273,15 +273,15 @@ HAL_StatusTypeDef fc_bmi323_initialize(struct fc_bmi323 *bmi323, I2C_HandleTypeD
      * GYR_CONF.gyr_avg_num = 0b000  for no averaging
      * GYR_CONF.gyr_bw =      0b1    for most accurate filtering (?)
      * GYR_CONF.gyr_range =   0b001  for +/- 250 deg/s range (datasheet pg. 94)
-     * GYR_CONF.gyr_odr =     0b1011 for 800 Hz sample rate (we may change this later)
+     * GYR_CONF.gyr_odr =     0b1000 for 100 Hz sample rate
      * format: [x:1][gyr_mode:3][x:1][gyr_avg_num:3]_[gyr_bw:1][gyr_range:3][gyr_odr:4]
-     * binary: [x]  [111]       [x]  [000]           [1]       [001]        [1011]
-     * hex:    0x70                                  0x9b
+     * binary: [x]  [111]       [x]  [000]           [1]       [001]        [1000]
+     * hex:    0x70                                  0x98
      */
     gyr_conf_bytes[3] &= 0x88u; /* TODO: finish this shit */
     gyr_conf_bytes[2] &= 0x00u;
     gyr_conf_bytes[3] |= 0x70u;
-    gyr_conf_bytes[2] |= 0x9bu;
+    gyr_conf_bytes[2] |= 0x98u;
     status = write_registers(bmi323, REGISTER_GYR_CONF, &gyr_conf_bytes[2],
                              sizeof(gyr_conf_bytes) - 2); /* no dummy bytes when writing */
     if (status != HAL_OK)
@@ -316,59 +316,27 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
     // TODO: Also think about using actual GPIO interrupts to handle data ready.
 
     HAL_StatusTypeDef status;
+    
+    int16_t sensor_data[8]; // dummy, 3-axis accel, 3-axis gyro, temp
+    status = read_registers(bmi323, REGISTER_ACC_DATA_X, sensor_data, sizeof(sensor_data));
+    if (status != HAL_OK)
+        goto error;
 
-    /*
-     * Gyroscope
-     */
+    // multiplier to convert an int16_t to the sensor range
+    // (65535 is the max of an int16_t)
 
-    {
-        int16_t gyro_data[4]; // dummy + 3-axis gyro data
-
-        // multiplier to convert an int16_t to the sensor range
-        // (65535 is the max of an int16_t)
-        float scale = (GYR_RANGE_MAX - GYR_RANGE_MIN) / 65535.0f;
-
-        status = read_registers(bmi323, REGISTER_GYR_DATA_X, gyro_data, sizeof(gyro_data));
-        if (status != HAL_OK)
-            goto error;
-
-        data->gyro_x = scale * (float)gyro_data[1];
-        data->gyro_y = scale * (float)gyro_data[2];
-        data->gyro_z = scale * (float)gyro_data[3];
-    }
-
-    /*
-     * Temperature
-     */
-
-    {
-        int16_t temp_data[2];
-
-        status = read_registers(bmi323, REGISTER_TEMP_DATA, temp_data, sizeof(temp_data));
-        if (status != HAL_OK)
-            goto error;
-
-        data->temp = (float)temp_data[1] / 512.0f + 23.0f;
-    }
-
-    /*
-     * Acceleration
-     */
-
-    {
-        int16_t accel_data[4]; // dummy + 3-axis acceleration data
-
-        status = read_registers(bmi323, REGISTER_ACC_DATA_X, accel_data, sizeof(accel_data));
-        if (status != HAL_OK)
-            goto error;
-
-        float scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
-
-        data->accel_x = scale * (float)accel_data[1];
-        data->accel_y = scale * (float)accel_data[2];
-        data->accel_z = scale * (float)accel_data[3];
-    }
-
+    float accel_scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
+    data->accel_x = accel_scale * (float)sensor_data[1];
+    data->accel_y = accel_scale * (float)sensor_data[2];
+    data->accel_z = accel_scale * (float)sensor_data[3];
+    
+    float gyro_scale = (GYR_RANGE_MAX - GYR_RANGE_MIN) / 65535.0f;
+    data->gyro_x = gyro_scale * (float)sensor_data[4];
+    data->gyro_y = gyro_scale * (float)sensor_data[5];
+    data->gyro_z = gyro_scale * (float)sensor_data[6];
+    
+    data->temp = (float)sensor_data[7] / 512.0f + 23.0f;
+    
     data->kernel_timestamp = xTaskGetTickCount();
 
     return HAL_OK;

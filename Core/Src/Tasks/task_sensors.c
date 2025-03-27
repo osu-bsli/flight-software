@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "Airbrakes/airbrakes.h"
-
+#include "Fusion.h"
 
 /*
 * task_sensors.c
@@ -31,7 +31,7 @@ static StaticTask_t tcb;
 static StackType_t stack[STACK_SIZE];
 
 static TickType_t time;
-const static TickType_t interval_ms = 55; // ~18 Hz, we want 100 Hz eventually
+const static TickType_t interval_ms = 10; // 100 Hz
 
 static struct fc_adxl375 adxl375;
 static struct fc_bmi323 bmi323;
@@ -144,17 +144,33 @@ static void sensors_init()
   /* Initialize sensor drivers */
   HAL_StatusTypeDef status;
 
-  status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
-  sensor_print_init_success_state("bm1422", status == HAL_OK);
+  bool retry = false;
+  int num_retries = 0;
 
-  status = fc_adxl375_initialize(&adxl375, &hi2c1, &semaphore_i2c1);
-  sensor_print_init_success_state("adxl375", status == HAL_OK);
+  do {
+    if (retry) {
+      retry = false;
+      num_retries += 1;
+      SEGGER_RTT_printf(0, "Retrying to initialize sensors...\n");
+    }
 
-  status = fc_bmi323_initialize(&bmi323, &hi2c1, &semaphore_i2c1);
-  sensor_print_init_success_state("bmi323", status == HAL_OK);
+    status = fc_bm1422_initialize(&bm1422, &hi2c4, &semaphore_i2c4);
+    if (status != HAL_OK) retry = true;
+    sensor_print_init_success_state("bm1422", status == HAL_OK);
 
-  status = fc_ms5607_initialize(&ms5607, &hi2c4, &semaphore_i2c4);
-  sensor_print_init_success_state("ms5607", status == HAL_OK);
+    status = fc_adxl375_initialize(&adxl375, &hi2c1, &semaphore_i2c1);
+    if (status != HAL_OK) retry = true;
+    sensor_print_init_success_state("adxl375", status == HAL_OK);
+
+    status = fc_bmi323_initialize(&bmi323, &hi2c1, &semaphore_i2c1);
+    if (status != HAL_OK) retry = true;
+    sensor_print_init_success_state("bmi323", status == HAL_OK);
+
+    status = fc_ms5607_initialize(&ms5607, &hi2c4, &semaphore_i2c4);
+    if (status != HAL_OK) retry = true;
+    sensor_print_init_success_state("ms5607", status == HAL_OK);
+
+  } while (retry && num_retries < 10);
 }
 
 static void task_sensors(void *argument)
@@ -171,10 +187,16 @@ static void task_sensors(void *argument)
   
   sensors_init();
 
+  uint8_t packet_tx_buf[sizeof(struct telemetry_packet)];
+
+  FusionAhrs ahrs;
+  FusionAhrsInitialise(&ahrs);
+
   while (true)
   {
     // SEGGER_RTT_printf(0, "Sensor time (ms): %d\n", time);
 
+    int start_ms = HAL_GetTick();
     struct fc_adxl375_data adxl375_data;
     fc_adxl375_process(&adxl375, &adxl375_data);
 
@@ -186,8 +208,22 @@ static void task_sensors(void *argument)
 
     struct fc_ms5607_data ms5607_data;
     fc_ms5607_process(&ms5607, &ms5607_data);
+    int elapsed_ms = HAL_GetTick() - start_ms;
+
+    // SEGGER_RTT_printf(0, "sensor process time: %d ms\n", elapsed_ms);
 
     int time_boot_ms = time;
+
+    /* Sensor fusion */
+    /* Flip signs and rearrange things as necessary to make sensor axes match FC axes */
+    /* FC axes are oriented with +X being from the STM32 to the SD card slot, and +Y being from the STM32 to the SWD port */
+    const FusionVector accelerometer = {-bmi323_data.accel_x, -bmi323_data.accel_y, bmi323_data.accel_z};
+    const FusionVector gyroscope = {-bmi323_data.gyro_x, -bmi323_data.gyro_y, bmi323_data.gyro_z};
+    const FusionVector magnetometer = {-bm1422_data.magnetic_strength_y, bm1422_data.magnetic_strength_x, bm1422_data.magnetic_strength_z};
+    FusionAhrsUpdate(&ahrs, gyroscope, accelerometer, magnetometer, interval_ms / 1000.0);
+    const FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
+
+    printf("Roll %0.1f, Pitch %0.1f, Yaw %0.1f\n", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
     uint8_t status_flags = 0;
     if (sdcard_is_in_degraded_state) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;
@@ -199,43 +235,37 @@ static void task_sensors(void *argument)
     struct telemetry_packet packet = {
         .status_flags = status_flags,
         .time_boot_ms = time_boot_ms,
-        .ms5607_pressure_mbar = ms5607_data.pressure_mbar,
-        .ms5607_temperature_c = ms5607_data.temperature_c,
-        .bmi323_accel_x = bmi323_data.accel_x,
-        .bmi323_accel_y = bmi323_data.accel_y,
-        .bmi323_accel_z = bmi323_data.accel_z,
-        .bmi323_gyro_x = bmi323_data.gyro_x,
-        .bmi323_gyro_y = bmi323_data.gyro_y,
-        .bmi323_gyro_z = bmi323_data.gyro_z,
-        .adxl375_accel_x = adxl375_data.accel_x,
-        .adxl375_accel_y = adxl375_data.accel_y,
-        .adxl375_accel_z = adxl375_data.accel_z,
+        .pitch = euler.angle.pitch,
+        .yaw = euler.angle.yaw,
+        .roll = euler.angle.roll,
+        .accel_magnitude = FusionVectorMagnitude(accelerometer)
     };
 
     telemetry_packet_make_header(&packet);
-
-    // TODO: Just saturate the UART link tbh
-    HAL_UART_Transmit_IT(&huart6, (uint8_t *)&packet, sizeof(packet));
-    // SEGGER_RTT_printf(0, "Telemetry packet sent: %d bytes\n", sizeof(packet));
-
-    unsigned int bytes_written_to_sd;
-    FRESULT fr_status = f_write(&log_file, (uint8_t *)&packet, sizeof(packet), &bytes_written_to_sd);
-    if (bytes_written_to_sd < 0 || fr_status != FR_OK)
+    
+    // Send a telemetry packet if the telemetry UART isn't busy
+    if (HAL_UART_GetState(&huart6) == HAL_UART_STATE_READY)
     {
-      sdcard_set_degraded();
+      memcpy(packet_tx_buf, &packet, sizeof(packet));
+      HAL_UART_Transmit_IT(&huart6, packet_tx_buf, sizeof(packet));
+      HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
+      // SEGGER_RTT_printf(0, "Sent telemetry packet\n");
     }
 
-    /* flush data to SD card */
-    fr_status = f_sync(&log_file);
-    if (fr_status != FR_OK)
-    {
-      sdcard_set_degraded();
-    }
+    // unsigned int bytes_written_to_sd;
+    // FRESULT fr_status = f_write(&log_file, (uint8_t *)&packet, sizeof(packet), &bytes_written_to_sd);
+    // if (bytes_written_to_sd < 0 || fr_status != FR_OK)
+    // {
+    //   sdcard_set_degraded();
+    // }
 
-    HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
+    // /* flush data to SD card */
+    // fr_status = f_sync(&log_file);
+    // if (fr_status != FR_OK)
+    // {
+    //   sdcard_set_degraded();
+    // }
 
-    // Wait for UART to be done (FreeRTOS)
-    xSemaphoreTake(semaphore_uart6, portMAX_DELAY);
 
     vTaskDelayUntil(&time, interval_ms);
   }

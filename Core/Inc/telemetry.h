@@ -22,6 +22,18 @@ struct __attribute__((packed)) telemetry_packet {
     uint16_t crc16;
     uint8_t status_flags; // StatusFlags bitfield
     uint32_t time_boot_ms; // Timestamp (ms since system boot)
+    float pitch; // Fused sensor data (unit: Euler angle deg)
+    float yaw;   // Fused sensor data (unit: Euler angle deg)
+    float roll;  // Fused sensor data (unit: Euler angle deg)
+    float accel_magnitude; // Magnitude of acceleration (unit: G)
+};
+
+struct __attribute__((packed)) logging_packet {
+    char magic[9]; // 'FUCKPETER' in ASCII with no null terminator
+    uint8_t size; // Total size of struct
+    uint16_t crc16;
+    uint8_t status_flags; // StatusFlags bitfield
+    uint32_t time_boot_ms; // Timestamp (ms since system boot)
     float ms5607_pressure_mbar; // MS5607 Air Pressure (unit: mbar)
     float ms5607_temperature_c; // MS5607 Temperature (unit: degrees C)
     float bmi323_accel_x; // BMI323 Acceleration X (unit: G)
