@@ -111,7 +111,10 @@ Core/Src/Airbrakes/UKF.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
 Core/Src/crc16.c \
-Core/Src/telemetry.c
+Core/Src/telemetry.c \
+Core/Src/Fusion/FusionAhrs.c \
+Core/Src/Fusion/FusionCompass.c \
+Core/Src/Fusion/FusionOffset.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -173,6 +176,7 @@ AS_INCLUDES =  \
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
+-ICore/Inc/Fusion \
 -IFATFS/Target \
 -IFATFS/App \
 -IDrivers/STM32H7xx_HAL_Driver/Inc \
