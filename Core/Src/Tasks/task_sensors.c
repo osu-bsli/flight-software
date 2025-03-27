@@ -189,6 +189,7 @@ static void task_sensors(void *argument)
 
   uint8_t packet_tx_buf[sizeof(struct telemetry_packet)];
 
+  // Initialise sensor fusion algorithm
   FusionAhrs ahrs;
   FusionAhrsInitialise(&ahrs);
 
@@ -218,12 +219,10 @@ static void task_sensors(void *argument)
     /* Flip signs and rearrange things as necessary to make sensor axes match FC axes */
     /* FC axes are oriented with +X being from the STM32 to the SD card slot, and +Y being from the STM32 to the SWD port */
     const FusionVector accelerometer = {-bmi323_data.accel_x, -bmi323_data.accel_y, bmi323_data.accel_z};
-    const FusionVector gyroscope = {-bmi323_data.gyro_x, -bmi323_data.gyro_y, bmi323_data.gyro_z};
+    const FusionVector gyroscope = {-bmi323_data.gyro_x, -bmi323_data.gyro_y, -bmi323_data.gyro_z};
     const FusionVector magnetometer = {-bm1422_data.magnetic_strength_y, bm1422_data.magnetic_strength_x, bm1422_data.magnetic_strength_z};
     FusionAhrsUpdate(&ahrs, gyroscope, accelerometer, magnetometer, interval_ms / 1000.0);
     const FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
-
-    printf("Roll %0.1f, Pitch %0.1f, Yaw %0.1f\n", euler.angle.roll, euler.angle.pitch, euler.angle.yaw);
 
     uint8_t status_flags = 0;
     if (sdcard_is_in_degraded_state) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;

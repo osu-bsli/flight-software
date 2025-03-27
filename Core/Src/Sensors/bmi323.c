@@ -104,11 +104,6 @@
 #define GYR_INVALID 0x8000u  /* invalid value for gyroscope data (datasheet pg. 24) */
 #define TEMP_INVALID 0x8000u /* invalid value for temperature data (datasheet pg. 25) */
 
-#define ACC_RANGE_MAX 4.0f /* acceleration          (g)     (datasheet pg. 23) */
-#define ACC_RANGE_MIN (-4.0f)
-#define GYR_RANGE_MAX 250.0f /* angular acceleration (deg/s) (datasheet pg. 25) */
-#define GYR_RANGE_MIN (-250.0f)
-
 /* Starts reading multiple bytes starting from a register (useful for batch reading from multiple
  * contiguous registers at once).
  * Use this to read multiple contiguous registers in one go (aka "burst mode").
@@ -325,15 +320,13 @@ HAL_StatusTypeDef fc_bmi323_process(struct fc_bmi323 *bmi323, struct fc_bmi323_d
     // multiplier to convert an int16_t to the sensor range
     // (65535 is the max of an int16_t)
 
-    float accel_scale = (ACC_RANGE_MAX - ACC_RANGE_MIN) / 65535.0f;
-    data->accel_x = accel_scale * (float)sensor_data[1];
-    data->accel_y = accel_scale * (float)sensor_data[2];
-    data->accel_z = accel_scale * (float)sensor_data[3];
+    data->accel_x = (float)sensor_data[1] / 8.19 / 1000.0; // +/-4g, 8.19 LSB/mg
+    data->accel_y = (float)sensor_data[2] / 8.19 / 1000.0; 
+    data->accel_z = (float)sensor_data[3] / 8.19 / 1000.0; 
     
-    float gyro_scale = (GYR_RANGE_MAX - GYR_RANGE_MIN) / 65535.0f;
-    data->gyro_x = gyro_scale * (float)sensor_data[4];
-    data->gyro_y = gyro_scale * (float)sensor_data[5];
-    data->gyro_z = gyro_scale * (float)sensor_data[6];
+    data->gyro_x = (float)sensor_data[4] / 131.072; // +/-250deg, 131.072 LSB/deg/s
+    data->gyro_y = (float)sensor_data[5] / 131.072;
+    data->gyro_z = (float)sensor_data[6] / 131.072;
     
     data->temp = (float)sensor_data[7] / 512.0f + 23.0f;
     
