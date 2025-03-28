@@ -11,7 +11,8 @@
         "cmath": "c",
         "compare": "cpp",
         "cstdint": "cpp",
-        "checksum.h": "c"
+        "checksum.h": "c",
+        "fatfs_platform.h": "c"
     },
     "search.exclude": {
         "build/": true

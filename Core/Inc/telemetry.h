@@ -4,6 +4,7 @@
 
 #define TELEMETRY_PACKET_MAX_LEN 255
 #define TELEMETRY_PACKET_MAGIC "FUCKPETER"
+#define LOGGING_PACKET_MAGIC "COREYMAYS"
 
 enum StatusFlags {
     STATUS_FLAGS_RECOVERY_ARMED = 1 << 0,
@@ -20,6 +21,7 @@ struct __attribute__((packed)) telemetry_packet {
     char magic[9]; // 'FUCKPETER' in ASCII with no null terminator
     uint8_t size; // Total size of struct
     uint16_t crc16;
+
     uint8_t status_flags; // StatusFlags bitfield
     uint32_t time_boot_ms; // Timestamp (ms since system boot)
     float pitch; // Fused sensor data (unit: Euler angle deg)
@@ -29,9 +31,10 @@ struct __attribute__((packed)) telemetry_packet {
 };
 
 struct __attribute__((packed)) logging_packet {
-    char magic[9]; // 'FUCKPETER' in ASCII with no null terminator
+    char magic[9]; // 'COREYMAYS' in ASCII with no null terminator
     uint8_t size; // Total size of struct
     uint16_t crc16;
+
     uint8_t status_flags; // StatusFlags bitfield
     uint32_t time_boot_ms; // Timestamp (ms since system boot)
     float ms5607_pressure_mbar; // MS5607 Air Pressure (unit: mbar)
@@ -48,3 +51,4 @@ struct __attribute__((packed)) logging_packet {
 };
 
 void telemetry_packet_make_header(struct telemetry_packet *p);
+void logging_packet_make_header(struct logging_packet *p);

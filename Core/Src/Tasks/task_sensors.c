@@ -77,55 +77,69 @@ static FIL sdcard_and_logging_init()
    * THAT TOOK A LITERAL YEAR TO DEBUG. FUCK.
    */
 
-  if (BSP_SD_IsDetected())
-  {
-    SEGGER_RTT_printf(0, "SD Card is SUCCESSFULLY detected\n");
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "SD Card is NOT detected\n");
-  }
+   if (BSP_SD_IsDetected())
+   {
+     SEGGER_RTT_printf(0, "SD Card is SUCCESSFULLY detected\n");
+   }
+   else
+   {
+     SEGGER_RTT_printf(0, "SD Card is NOT detected\n");
+   }
 
-  FRESULT fr_status = f_mount(&SDFatFS, SDPath, 1);
-  if (fr_status == FR_OK)
-  {
-    SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
-    sdcard_set_not_degraded();
-  }
-  else
-  {
-    switch (fr_status) {
-      case FR_NO_FILESYSTEM:
-        SEGGER_RTT_printf(0, "SD Card f_mount error: there is no filesystem on the SD card\n", fr_status);
-        break;
-      default:
-        SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
-        break;
+  FRESULT fr_status;
+  int n = 0;
+  do {
+    if (n > 0) 
+    {
+      SEGGER_RTT_printf(0, "Retrying to mount SD card...\n");
     }
-  }
 
-  /* Find a %d.csv filename that is free to use */
+    fr_status = f_mount(&SDFatFS, SDPath, 1);
+    if (fr_status == FR_OK)
+    {
+      SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
+      sdcard_set_not_degraded();
+    }
+    else
+    {
+      switch (fr_status) {
+        case FR_NOT_READY:
+          SEGGER_RTT_printf(0, "SD Card f_mount error: not ready. Perhaps there is no SD card inserted.\n", fr_status);
+          SEGGER_RTT_printf(0, "If this error happens after f_mount takes a really long time, maybe the SDMMC DMA cannot access the memory it has been commanded to access.\n");
+          break;
+        case FR_NO_FILESYSTEM:
+          SEGGER_RTT_printf(0, "SD Card f_mount error: there is no filesystem on the SD card\n", fr_status);
+          break;
+        default:
+          SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
+          break;
+      }
+    }
+    n++;
+  } while (fr_status != FR_OK && n < 10);
+
+  /* Find a %d filename that is free to use */
   char file_name[16];
   int file_num = 0;
   do
   {
-    snprintf(file_name, 16, "%d.csv", file_num);
+    snprintf(file_name, 16, "%d", file_num);
     file_num++;
   } while ((fr_status = f_stat(file_name, NULL)) == FR_OK);
 
-  /* Open the csv */
-  FIL log_csv;
-  fr_status = f_open(&log_csv, file_name, FA_CREATE_NEW | FA_WRITE);
+  /* Open the file */
+  FIL file;
+  fr_status = f_open(&file, file_name, FA_CREATE_NEW | FA_WRITE);
   if (fr_status == FR_OK)
   {
-    SEGGER_RTT_printf(0, "Opened %s for telemetry logging\n", file_name);
+    SEGGER_RTT_printf(0, "Opened file \"%s\" for telemetry logging\n", file_name);
   }
   else
   {
-    SEGGER_RTT_printf(0, "Failed to open %s, f_open return code: %d\n", file_name, fr_status);
+    SEGGER_RTT_printf(0, "Failed to open file \"%s\", f_open return code: %d\n", file_name, fr_status);
   }
 
-  return log_csv;
+  return file;
 }
 
 static void sensor_print_init_success_state(const char* name, bool was_successful) {
@@ -170,7 +184,7 @@ static void sensors_init()
     if (status != HAL_OK) retry = true;
     sensor_print_init_success_state("ms5607", status == HAL_OK);
 
-  } while (retry && num_retries < 10);
+  } while (retry && num_retries < 20);
 }
 
 static void task_sensors(void *argument)
@@ -183,7 +197,6 @@ static void task_sensors(void *argument)
   semaphore_uart6 = xSemaphoreCreateBinary();
 
   FIL log_file = sdcard_and_logging_init();
-  f_printf(&log_file, "time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,high_g_accel_x,high_g_accel_y,high_g_accel_z,pressure_mbar,temperature_c\n");
   
   sensors_init();
 
@@ -231,7 +244,7 @@ static void task_sensors(void *argument)
     if (bmi323.is_in_degraded_state) status_flags |= STATUS_FLAGS_BMI323_DEGRADED;
     if (ms5607.is_in_degraded_state) status_flags |= STATUS_FLAGS_MS5607_DEGRADED;
 
-    struct telemetry_packet packet = {
+    struct telemetry_packet tele_p = {
         .status_flags = status_flags,
         .time_boot_ms = time_boot_ms,
         .pitch = euler.angle.pitch,
@@ -239,32 +252,47 @@ static void task_sensors(void *argument)
         .roll = euler.angle.roll,
         .accel_magnitude = FusionVectorMagnitude(accelerometer)
     };
-
-    telemetry_packet_make_header(&packet);
+    telemetry_packet_make_header(&tele_p);
     
     // Send a telemetry packet if the telemetry UART isn't busy
     if (HAL_UART_GetState(&huart6) == HAL_UART_STATE_READY)
     {
-      memcpy(packet_tx_buf, &packet, sizeof(packet));
-      HAL_UART_Transmit_IT(&huart6, packet_tx_buf, sizeof(packet));
+      memcpy(packet_tx_buf, &tele_p, sizeof(tele_p));
+      HAL_UART_Transmit_IT(&huart6, packet_tx_buf, sizeof(tele_p));
       HAL_GPIO_TogglePin(GPIO_OUT_LED_BLUE_GPIO_Port, GPIO_OUT_LED_BLUE_Pin);
       // SEGGER_RTT_printf(0, "Sent telemetry packet\n");
     }
 
-    // unsigned int bytes_written_to_sd;
-    // FRESULT fr_status = f_write(&log_file, (uint8_t *)&packet, sizeof(packet), &bytes_written_to_sd);
-    // if (bytes_written_to_sd < 0 || fr_status != FR_OK)
-    // {
-    //   sdcard_set_degraded();
-    // }
+    struct logging_packet log_p = {
+      .status_flags = status_flags,
+      .time_boot_ms = time_boot_ms,
+      .ms5607_pressure_mbar = ms5607_data.pressure_mbar,
+      .ms5607_temperature_c = ms5607_data.temperature_c,
+      .bmi323_accel_x = bmi323_data.accel_x,
+      .bmi323_accel_y = bmi323_data.accel_y,
+      .bmi323_accel_z = bmi323_data.accel_z,
+      .bmi323_gyro_x = bmi323_data.gyro_x,
+      .bmi323_gyro_y = bmi323_data.gyro_y,
+      .bmi323_gyro_z = bmi323_data.gyro_z,
+      .adxl375_accel_x = adxl375_data.accel_x,
+      .adxl375_accel_y = adxl375_data.accel_y,
+      .adxl375_accel_z = adxl375_data.accel_z,
+    };
+    logging_packet_make_header(&log_p);
 
-    // /* flush data to SD card */
-    // fr_status = f_sync(&log_file);
-    // if (fr_status != FR_OK)
-    // {
-    //   sdcard_set_degraded();
-    // }
+    unsigned int bytes_written_to_sd;
+    FRESULT fr_status = f_write(&log_file, (uint8_t *)&log_p, sizeof(log_p), &bytes_written_to_sd);
+    if (bytes_written_to_sd < 0 || fr_status != FR_OK)
+    {
+      sdcard_set_degraded();
+    }
 
+    /* flush data to SD card */
+    fr_status = f_sync(&log_file);
+    if (fr_status != FR_OK)
+    {
+      sdcard_set_degraded();
+    }
 
     vTaskDelayUntil(&time, interval_ms);
   }
