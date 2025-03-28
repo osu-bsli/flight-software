@@ -28,6 +28,7 @@ struct __attribute__((packed)) telemetry_packet {
     float yaw;   // Fused sensor data (unit: Euler angle deg)
     float roll;  // Fused sensor data (unit: Euler angle deg)
     float accel_magnitude; // Magnitude of acceleration (unit: G)
+    float ms5607_pressure_mbar; // Pressure (unit: mbar)
 };
 
 struct __attribute__((packed)) logging_packet {

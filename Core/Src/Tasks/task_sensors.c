@@ -244,13 +244,17 @@ static void task_sensors(void *argument)
     if (bmi323.is_in_degraded_state) status_flags |= STATUS_FLAGS_BMI323_DEGRADED;
     if (ms5607.is_in_degraded_state) status_flags |= STATUS_FLAGS_MS5607_DEGRADED;
 
+    // pitch <- fused roll
+    // yaw <- fused pitch
+    // roll <- fused yaw
     struct telemetry_packet tele_p = {
         .status_flags = status_flags,
         .time_boot_ms = time_boot_ms,
-        .pitch = euler.angle.pitch,
-        .yaw = euler.angle.yaw,
-        .roll = euler.angle.roll,
-        .accel_magnitude = FusionVectorMagnitude(accelerometer)
+        .pitch = euler.angle.roll,
+        .yaw = euler.angle.pitch,
+        .roll = euler.angle.yaw,
+        .accel_magnitude = FusionVectorMagnitude(accelerometer),
+        .ms5607_pressure_mbar = ms5607_data.pressure_mbar
     };
     telemetry_packet_make_header(&tele_p);
     
