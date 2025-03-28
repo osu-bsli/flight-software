@@ -95,9 +95,10 @@ https://github.com/STMicroelectronics/STM32CubeH7/blob/master/Projects/STM32H743
               - The addresses and the size of cacheable buffers (shared between CPU and other masters)
                 must be	properly defined to be aligned to L1-CACHE line size (32 bytes). 
 
-2. IF DCACHE/ICACHE IS ENABLED, YOU HAVE TO TELL FATFS TO MANUALLY MAINTAIN CACHES, OR THE SDMMC DMA WILL READ OUTDATED/INVALID MEMORY
+2. IF DCACHE IS ENABLED, YOU HAVE TO TELL FATFS TO MANUALLY MAINTAIN CACHES, OR THE SDMMC DMA WILL READ OUTDATED/INVALID MEMORY
 
-**PLEASE ENABLE THIS AND KEEP THIS ENABLED IN `sd_diskio.c`:**
+**IF YOU ARE NOT USING DCACHE DON'T ENABLE THIS. ENABLING THIS WITHOUT HAVING DCACHE ALSO BREAKS THE SDCARD.**
+**IF USING DCACHE, PLEASE ENABLE THIS AND KEEP THIS ENABLED IN `sd_diskio.c`:**
 ```c
 /*
  * when using cacheable memory region, it may be needed to maintain the cache
