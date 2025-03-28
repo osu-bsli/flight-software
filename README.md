@@ -54,13 +54,6 @@ On Windows, probe-rs is only obtainable through **cargo**, the package manager f
 - **Python 3.11 or later**
   - Get it from https://python.org 
 
-**Required preliminary actions:**  
-Run these inside the flight-software repo directory.  
-Install dependencies for MAVLink (aerial vehicle communication protocol):
-```
-python -m pip install -r External/mavlink/pymavlink/requirements.txt
-```
-
 ## Compiling and Uploading to Flight Computer
 
 Build the flight software:
@@ -91,7 +84,7 @@ jia.659@osu.edu
 
 # BRIAN JIA'S NOTES FROM DEBUGGING HELL
 
-DO NOT PLACE PROGRAM RAM INTO DTCM. THE SDMMC DMA CANNOT READ FROM DTCM AND IT WILL FAIL IN WEIRD WAYS.  
+1. DO NOT PLACE PROGRAM RAM INTO DTCM. THE SDMMC DMA CANNOT READ FROM DTCM AND IT WILL FAIL IN WEIRD WAYS.  
 https://github.com/STMicroelectronics/STM32CubeH7/blob/master/Projects/STM32H743I-EVAL/Examples/SD/SD_ReadWrite_IT/readme.txt
 
 > @Note If the  application is using the DTCM/ITCM memories (@0x20000000/ 0x0000000: not cacheable and only accessible
@@ -101,4 +94,18 @@ https://github.com/STMicroelectronics/STM32CubeH7/blob/master/Projects/STM32H743
               - Add a cache maintenance mechanism to ensure the cache coherence between CPU and other masters(DMAs,DMA2D,LTDC,MDMA).
               - The addresses and the size of cacheable buffers (shared between CPU and other masters)
                 must be	properly defined to be aligned to L1-CACHE line size (32 bytes). 
+
+2. IF DCACHE/ICACHE IS ENABLED, YOU HAVE TO TELL FATFS TO MANUALLY MAINTAIN CACHES, OR THE SDMMC DMA WILL READ OUTDATED/INVALID MEMORY
+
+**PLEASE ENABLE THIS AND KEEP THIS ENABLED IN `sd_diskio.c`:**
+```c
+/*
+ * when using cacheable memory region, it may be needed to maintain the cache
+ * validity. Enable the define below to activate a cache maintenance at each
+ * read and write operation.
+ * Notice: This is applicable only for cortex M7 based platform.
+ */
+/* USER CODE BEGIN enableSDDmaCacheMaintenance */
+#define ENABLE_SD_DMA_CACHE_MAINTENANCE  1
+/* USER CODE END enableSDDmaCacheMaintenance */
 ```
