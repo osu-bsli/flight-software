@@ -105,9 +105,6 @@ int main(void)
   /* Enable I-Cache---------------------------------------------------------*/
   SCB_EnableICache();
 
-  /* Enable D-Cache---------------------------------------------------------*/
-  SCB_EnableDCache();
-
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -216,7 +213,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 60;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 80;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
@@ -361,7 +358,7 @@ static void MX_SDMMC1_SD_Init(void)
   hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
   hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
   hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd1.Init.ClockDiv = 0;
+  hsd1.Init.ClockDiv = 120;
   /* USER CODE BEGIN SDMMC1_Init 2 */
 
   /* USER CODE END SDMMC1_Init 2 */
@@ -433,16 +430,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOH, GPIO_OUT_TESEO_WAKEUP_Pin|GPIO_OUT_TESEO_1PPS_Pin|GPIO_OUT_TESEO_SYSRSTN_Pin|GPIO_OUT_TESEO_ANTOFF_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOH, GPIO_OUT_TESEO_WAKEUP_Pin|GPIO_OUT_TESEO_1PPS_Pin|GPIO_PIN_10|GPIO_OUT_TESEO_ANTOFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_OUT_LED_BLUE_Pin|GPIO_OUT_LED_GREEN_Pin|GPIO_OUT_LED_RED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : GPIO_OUT_TESEO_WAKEUP_Pin GPIO_OUT_TESEO_1PPS_Pin GPIO_OUT_TESEO_SYSRSTN_Pin GPIO_OUT_TESEO_ANTOFF_Pin */
-  GPIO_InitStruct.Pin = GPIO_OUT_TESEO_WAKEUP_Pin|GPIO_OUT_TESEO_1PPS_Pin|GPIO_OUT_TESEO_SYSRSTN_Pin|GPIO_OUT_TESEO_ANTOFF_Pin;
+  /*Configure GPIO pins : GPIO_OUT_TESEO_WAKEUP_Pin GPIO_OUT_TESEO_1PPS_Pin PH10 GPIO_OUT_TESEO_ANTOFF_Pin */
+  GPIO_InitStruct.Pin = GPIO_OUT_TESEO_WAKEUP_Pin|GPIO_OUT_TESEO_1PPS_Pin|GPIO_PIN_10|GPIO_OUT_TESEO_ANTOFF_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
