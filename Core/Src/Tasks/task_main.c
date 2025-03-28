@@ -1,4 +1,5 @@
 #include "stm32h7xx_hal.h"
+#include "Tasks/task_airbrakes.h"
 #include "Tasks/task_blinky.h"
 #include "Tasks/task_sensors.h"
 #include <FreeRTOS.h>
@@ -29,6 +30,7 @@ void task_main(void const *argument)
 
   initialize();
 
+  // task_airbrakes_start();
   task_sensors_start();
   task_blinky_start();
 

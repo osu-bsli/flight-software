@@ -279,7 +279,7 @@ void task_sensors_start(void)
       "sensors",         /* Text name for the task. */
       STACK_SIZE,       /* Number of indexes in the xStack array. */
       NULL,             /* Parameter passed into the task. */
-      tskIDLE_PRIORITY, /* Priority at which the task is created. */
+      1, /* Priority at which the task is created. */
       stack,            /* Array to use as the task's stack. */
       &tcb);            /* Variable to hold the task's data structure. */
 }

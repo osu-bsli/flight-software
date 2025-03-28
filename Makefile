@@ -22,7 +22,7 @@ TARGET = flight-software
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -O3
 
 
 #######################################
@@ -84,6 +84,7 @@ Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 Core/Src/SEGGER_RTT.c \
 Core/Src/SEGGER_RTT_printf.c \
+Core/Src/Tasks/task_airbrakes.c \
 Core/Src/Tasks/task_blinky.c \
 Core/Src/Tasks/task_main.c \
 Core/Src/Tasks/task_sensors.c \
@@ -97,12 +98,6 @@ Drivers/BSP/Components/teseo_liv3f/teseo_liv3f_i2c.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f_queue.c \
 Drivers/BSP/Components/teseo_liv3f/teseo_liv3f_uart.c \
 Core/Src/custom_bus.c \
-GNSS/Target/gnss_lib_config.c \
-GNSS/Target/custom_gnss.c \
-GNSS/Target/stm32_bus_ex.c \
-Middlewares/ST/lib_gnss/LibGNSS/Src/gnss_parser.c \
-Middlewares/ST/lib_gnss/LibGNSS/Src/gnss_data.c \
-Middlewares/ST/lib_gnss/LibNMEA/Src/NMEA_parser.c \
 Middlewares/Third_Party/FatFs/src/option/ccsbcs.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
@@ -114,7 +109,16 @@ Core/Src/crc16.c \
 Core/Src/telemetry.c \
 Core/Src/Fusion/FusionAhrs.c \
 Core/Src/Fusion/FusionCompass.c \
-Core/Src/Fusion/FusionOffset.c
+Core/Src/Fusion/FusionOffset.c \
+Drivers/CMSIS/DSP/Source/MatrixFunctions/MatrixFunctions.c 
+
+C_SOURCES_NO_OPT = \
+GNSS/Target/gnss_lib_config.c \
+GNSS/Target/custom_gnss.c \
+GNSS/Target/stm32_bus_ex.c \
+Middlewares/ST/lib_gnss/LibGNSS/Src/gnss_parser.c \
+Middlewares/ST/lib_gnss/LibGNSS/Src/gnss_data.c \
+Middlewares/ST/lib_gnss/LibNMEA/Src/NMEA_parser.c \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -186,6 +190,7 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FatFs/src \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
+-IDrivers/CMSIS/DSP/Include \
 -IDrivers/BSP/Components/teseo_liv3f \
 -IGNSS/Target \
 -IMiddlewares/ST/lib_gnss/LibGNSS/Inc \
@@ -203,7 +208,8 @@ CFLAGS += -Wno-unused-parameter -Wno-unused-variable \
     -Wpointer-arith -Wformat=2 \
     -Werror=incompatible-pointer-types -Werror=implicit-function-declaration \
     -Werror=return-type -Werror=implicit-int \
-    -Werror=format
+    -Werror=format \
+	-DARM_MATH_LOOPUNROLL
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -237,11 +243,16 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+OBJECTS_NO_OPT = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES_NO_OPT:.c=.o)))
+OBJECTS += $(OBJECTS_NO_OPT)
+vpath %.c $(sort $(dir $(C_SOURCES_NO_OPT)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASMM_SOURCES:.S=.o)))
 vpath %.S $(sort $(dir $(ASMM_SOURCES)))
+
+$(OBJECTS_NO_OPT)/%.o: OPT = -Og
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
