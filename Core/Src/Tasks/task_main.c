@@ -2,6 +2,7 @@
 #include "Tasks/task_airbrakes.h"
 #include "Tasks/task_blinky.h"
 #include "Tasks/task_sensors.h"
+#include "Tasks/task_sdcard.h"
 #include <FreeRTOS.h>
 #include <stdbool.h>
 #include <task.h>
@@ -19,19 +20,17 @@
  * provide the stack buffer, task buffer, and initialization code.
  */
 
-void initialize(void)
-{
-  SEGGER_RTT_printf(0, "Hello World from BSLI!\n");
-}
-
 void task_main(void const *argument)
 {
   UNUSED(argument);
 
-  initialize();
+  SEGGER_RTT_printf(0, "Hello World from BSLI!\n");
+
+  task_sdcard_init();
 
   // task_airbrakes_start();
   task_sensors_start();
+  task_sdcard_start();
   task_blinky_start();
 
   // Suspend the main task.

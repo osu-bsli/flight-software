@@ -8,6 +8,9 @@
  * task_blinky.c
  *
  * Task for blinking the red debug LED on and off.
+ * 
+ * The purpose of the blinking is to show that the flight computer and FreeRTOS are functioning, 
+ * at least minimally, so I've set its priority to be higher than any other task's.
  *
  * @author Brian Jia
  */
@@ -69,7 +72,7 @@ void task_blinky_start(void) {
       "blinky",         /* Text name for the task. */
       STACK_SIZE,       /* Number of indexes in the xStack array. */
       NULL,             /* Parameter passed into the task. */
-      tskIDLE_PRIORITY, /* Priority at which the task is created. */
+      10, /* Priority at which the task is created. */
       stack,            /* Array to use as the task's stack. */
       &tcb);            /* Variable to hold the task's data structure. */
 }

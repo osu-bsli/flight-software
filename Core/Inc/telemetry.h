@@ -31,7 +31,7 @@ struct __attribute__((packed)) telemetry_packet {
     float ms5607_pressure_mbar; // Pressure (unit: mbar)
 };
 
-struct __attribute__((packed)) logging_packet {
+struct __attribute__((packed)) log_packet {
     char magic[9]; // 'COREYMAYS' in ASCII with no null terminator
     uint8_t size; // Total size of struct
     uint16_t crc16;
@@ -52,4 +52,4 @@ struct __attribute__((packed)) logging_packet {
 };
 
 void telemetry_packet_make_header(struct telemetry_packet *p);
-void logging_packet_make_header(struct logging_packet *p);
+void logging_packet_make_header(struct log_packet *p);

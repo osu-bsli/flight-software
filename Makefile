@@ -88,6 +88,7 @@ Core/Src/SEGGER_RTT_printf.c \
 Core/Src/Tasks/task_airbrakes.c \
 Core/Src/Tasks/task_blinky.c \
 Core/Src/Tasks/task_main.c \
+Core/Src/Tasks/task_sdcard.c \
 Core/Src/Tasks/task_sensors.c \
 Core/Src/common.c \
 Core/Src/Sensors/adxl375.c \

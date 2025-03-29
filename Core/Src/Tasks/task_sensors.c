@@ -1,6 +1,7 @@
 #include <SEGGER_RTT.h>
 #include "flight_software.h"
 #include "Tasks/task_sensors.h"
+#include "Tasks/task_sdcard.h"
 #include "checksum.h"
 #include "Sensors/adxl375.h"
 #include "Sensors/bmi323.h"
@@ -31,7 +32,7 @@ static StaticTask_t tcb;
 static StackType_t stack[STACK_SIZE];
 
 static TickType_t time;
-const static TickType_t interval_ms = 10; // 100 Hz
+const static TickType_t interval_ms = LOG_INTERVAL_MS; // 100 Hz
 
 static struct fc_adxl375 adxl375;
 static struct fc_bmi323 bmi323;
@@ -45,102 +46,6 @@ extern UART_HandleTypeDef huart6;
 static SemaphoreHandle_t semaphore_i2c1;
 static SemaphoreHandle_t semaphore_i2c4;
 static SemaphoreHandle_t semaphore_uart6;
-
-static bool sdcard_is_in_degraded_state;
-
-static void sdcard_set_not_degraded()
-{
-  /* Turn on green LED to indicate SD card success */
-  sdcard_is_in_degraded_state = false;
-  HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 1);
-}
-
-static void sdcard_set_degraded()
-{
-  sdcard_is_in_degraded_state = true;
-  HAL_GPIO_WritePin(GPIO_OUT_LED_GREEN_GPIO_Port, GPIO_OUT_LED_GREEN_Pin, 0);
-}
-
-static FIL sdcard_and_logging_init()
-{
-
-  /* Set up SD card */
-
-  // TODO: Maybe try re-opening the SD card if it disconnects mid-flight
-
-  /*
-   * BRIAN JIA'S NOTES FROM DEBUGGING HELL:
-   *
-   * DO NOT PLACE PROGRAM RAM INTO DTCM. THE SDMMC DMA CANNOT READ FROM DTCM AND IT WILL FAIL IN WEIRD WAYS.
-   * f_mount() WILL TIME OUT FOR NO APPARENT REASON IF PROGRAM RAM AND THUS THE SDMMC DMA BUFFER IS IN DTCM.
-   *
-   * THAT TOOK A LITERAL YEAR TO DEBUG. FUCK.
-   */
-
-   if (BSP_SD_IsDetected())
-   {
-     SEGGER_RTT_printf(0, "SD Card is SUCCESSFULLY detected\n");
-   }
-   else
-   {
-     SEGGER_RTT_printf(0, "SD Card is NOT detected\n");
-   }
-
-  FRESULT fr_status;
-  int n = 0;
-  do {
-    if (n > 0) 
-    {
-      SEGGER_RTT_printf(0, "Retrying to mount SD card...\n");
-    }
-
-    fr_status = f_mount(&SDFatFS, SDPath, 1);
-    if (fr_status == FR_OK)
-    {
-      SEGGER_RTT_printf(0, "SD Card f_mount success\n", fr_status);
-      sdcard_set_not_degraded();
-    }
-    else
-    {
-      switch (fr_status) {
-        case FR_NOT_READY:
-          SEGGER_RTT_printf(0, "SD Card f_mount error: not ready. Perhaps there is no SD card inserted.\n", fr_status);
-          SEGGER_RTT_printf(0, "If this error happens after f_mount takes a really long time, maybe the SDMMC DMA cannot access the memory it has been commanded to access.\n");
-          break;
-        case FR_NO_FILESYSTEM:
-          SEGGER_RTT_printf(0, "SD Card f_mount error: there is no filesystem on the SD card\n", fr_status);
-          break;
-        default:
-          SEGGER_RTT_printf(0, "SD Card f_mount error, code: %d\n", fr_status);
-          break;
-      }
-    }
-    n++;
-  } while (fr_status != FR_OK && n < 10);
-
-  /* Find a %d filename that is free to use */
-  char file_name[16];
-  int file_num = 0;
-  do
-  {
-    snprintf(file_name, 16, "%d", file_num);
-    file_num++;
-  } while ((fr_status = f_stat(file_name, NULL)) == FR_OK);
-
-  /* Open the file */
-  FIL file;
-  fr_status = f_open(&file, file_name, FA_CREATE_NEW | FA_WRITE);
-  if (fr_status == FR_OK)
-  {
-    SEGGER_RTT_printf(0, "Opened file \"%s\" for telemetry logging\n", file_name);
-  }
-  else
-  {
-    SEGGER_RTT_printf(0, "Failed to open file \"%s\", f_open return code: %d\n", file_name, fr_status);
-  }
-
-  return file;
-}
 
 static void sensor_print_init_success_state(const char* name, bool was_successful) {
   if (was_successful)
@@ -195,8 +100,6 @@ static void task_sensors(void *argument)
   semaphore_i2c1 = xSemaphoreCreateBinary();
   semaphore_i2c4 = xSemaphoreCreateBinary();
   semaphore_uart6 = xSemaphoreCreateBinary();
-
-  FIL log_file = sdcard_and_logging_init();
   
   sensors_init();
 
@@ -238,7 +141,7 @@ static void task_sensors(void *argument)
     const FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
 
     uint8_t status_flags = 0;
-    if (sdcard_is_in_degraded_state) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;
+    if (sdcard_get_is_in_degraded_state()) status_flags |= STATUS_FLAGS_SD_CARD_DEGRADED;
     if (adxl375.is_in_degraded_state) status_flags |= STATUS_FLAGS_ADXL375_DEGRADED;
     if (bm1422.is_in_degraded_state) status_flags |= STATUS_FLAGS_BM1422_DEGRADED;
     if (bmi323.is_in_degraded_state) status_flags |= STATUS_FLAGS_BMI323_DEGRADED;
@@ -267,7 +170,7 @@ static void task_sensors(void *argument)
       // SEGGER_RTT_printf(0, "Sent telemetry packet\n");
     }
 
-    struct logging_packet log_p = {
+    struct log_packet log_p = {
       .status_flags = status_flags,
       .time_boot_ms = time_boot_ms,
       .ms5607_pressure_mbar = ms5607_data.pressure_mbar,
@@ -283,20 +186,7 @@ static void task_sensors(void *argument)
       .adxl375_accel_z = adxl375_data.accel_z,
     };
     logging_packet_make_header(&log_p);
-
-    unsigned int bytes_written_to_sd;
-    FRESULT fr_status = f_write(&log_file, (uint8_t *)&log_p, sizeof(log_p), &bytes_written_to_sd);
-    if (bytes_written_to_sd < 0 || fr_status != FR_OK)
-    {
-      sdcard_set_degraded();
-    }
-
-    /* flush data to SD card */
-    fr_status = f_sync(&log_file);
-    if (fr_status != FR_OK)
-    {
-      sdcard_set_degraded();
-    }
+    sdcard_write_to_log_file((uint8_t*)&log_p, sizeof(log_p));
 
     vTaskDelayUntil(&time, interval_ms);
   }
@@ -311,7 +201,7 @@ void task_sensors_start(void)
       "sensors",         /* Text name for the task. */
       STACK_SIZE,       /* Number of indexes in the xStack array. */
       NULL,             /* Parameter passed into the task. */
-      1, /* Priority at which the task is created. */
+      3, /* Priority at which the task is created. */
       stack,            /* Array to use as the task's stack. */
       &tcb);            /* Variable to hold the task's data structure. */
 }
