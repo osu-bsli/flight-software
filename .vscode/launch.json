@@ -32,6 +32,25 @@
                     "programBinary": "./build/flight-software.elf"
                 }
             ]
+        },
+        
+        {
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "name": "probe-rs Attach",
+            "cwd": "",
+            "connectUnderReset": false,
+            "chip": "STM32H753IITx",
+            "flashingConfig": {
+                "flashingEnabled": false,
+                "haltAfterReset": false
+            },
+            "coreConfigs": [
+                {
+                    "coreIndex": 0,
+                    "programBinary": "./build/flight-software.elf"
+                }
+            ]
         }
 
     ]
